@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- No INTERNET permission: every step runs on-device. -->
+    <!-- Every step runs on-device. ML Kit's telemetry transport merges these
+         two in; removing them only stops its usage pings, recognition uses the
+         bundled model. app/build.gradle.kts fails the build if any network
+         permission reaches the merged manifest. -->
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" />
 
     <!-- Nothing is backed up or transferred: backup_rules.xml (Android 11)
          and data_extraction_rules.xml (12+) both exclude everything. -->

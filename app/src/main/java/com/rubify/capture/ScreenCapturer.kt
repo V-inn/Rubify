@@ -9,32 +9,38 @@ import android.os.Looper
 import android.util.Log
 import android.view.Display
 import com.rubify.LOG_TAG
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.Executor
 
 /**
  * Silent screenshots through [AccessibilityService.takeScreenshot] (API 30+).
  * Unlike MediaProjection there is no dialog and no recording notification.
  *
- * [onCaptured] runs on the capture thread with a software ARGB_8888 bitmap
- * in physical device pixels, and takes ownership of it (must recycle).
+ * Results are delivered on [executor]. The caller is responsible for not
+ * starting a capture while one is still running.
  */
 class ScreenCapturer(
     private val service: AccessibilityService,
-    private val onCaptured: (Bitmap) -> Unit,
+    private val executor: Executor,
 ) {
-
-    private val executor: ExecutorService =
-        Executors.newSingleThreadExecutor { runnable -> Thread(runnable, "rubify-capture") }
 
     private val mainHandler = Handler(Looper.getMainLooper())
 
-    private val inFlight = AtomicBoolean(false)
+    /**
+     * Captures the default display after [SETTLE_DELAY_MS]. Exactly one of
+     * the callbacks runs, on the executor. [onCaptured] receives a software
+     * ARGB_8888 bitmap in physical device pixels and takes ownership of it
+     * (must recycle).
+     */
+    fun capture(onCaptured: (Bitmap) -> Unit, onFailed: () -> Unit) {
+        // When another service also uses the accessibility button, the tap
+        // opens a system chooser. Capturing right away (measured: ~50 ms after
+        // the click) records the chooser and its dim scrim over the content.
+        mainHandler.postDelayed({ takeScreenshot(onCaptured, onFailed) }, SETTLE_DELAY_MS)
+    }
 
-    private val callback = object : TakeScreenshotCallback {
-        override fun onSuccess(result: ScreenshotResult) {
-            try {
+    private fun takeScreenshot(onCaptured: (Bitmap) -> Unit, onFailed: () -> Unit) {
+        val callback = object : TakeScreenshotCallback {
+            override fun onSuccess(result: ScreenshotResult) {
                 val bitmap = result.hardwareBuffer.use { buffer ->
                     Bitmap.wrapHardwareBuffer(buffer, result.colorSpace)?.let { hardware ->
                         try {
@@ -48,49 +54,29 @@ class ScreenCapturer(
                 }
                 if (bitmap == null) {
                     Log.w(LOG_TAG, "Screenshot could not be converted to a bitmap")
-                    return
+                    onFailed()
+                } else {
+                    onCaptured(bitmap)
                 }
-                onCaptured(bitmap)
-            } finally {
-                inFlight.set(false)
+            }
+
+            override fun onFailure(errorCode: Int) {
+                Log.w(LOG_TAG, "Screenshot failed: ${errorName(errorCode)}")
+                onFailed()
             }
         }
-
-        override fun onFailure(errorCode: Int) {
-            inFlight.set(false)
-            Log.w(LOG_TAG, "Screenshot failed: ${errorName(errorCode)}")
-        }
-    }
-
-    /**
-     * Schedules a capture of the default display after [SETTLE_DELAY_MS].
-     * Returns false if the tap was dropped because a capture is still running.
-     */
-    fun capture(): Boolean {
-        if (!inFlight.compareAndSet(false, true)) {
-            Log.i(LOG_TAG, "Capture already in progress, tap dropped")
-            return false
-        }
-        // When another service also uses the accessibility button, the tap
-        // opens a system chooser. Capturing right away (measured: ~50 ms after
-        // the click) records the chooser and its dim scrim over the content.
-        mainHandler.postDelayed(::takeScreenshot, SETTLE_DELAY_MS)
-        return true
-    }
-
-    private fun takeScreenshot() {
         try {
             service.takeScreenshot(Display.DEFAULT_DISPLAY, executor, callback)
         } catch (e: RuntimeException) {
             // e.g. SecurityException if canTakeScreenshot is missing from the config.
-            inFlight.set(false)
             Log.e(LOG_TAG, "takeScreenshot rejected", e)
+            onFailed()
         }
     }
 
+    /** Cancels a capture that is still waiting for [SETTLE_DELAY_MS]. */
     fun shutdown() {
         mainHandler.removeCallbacksAndMessages(null)
-        executor.shutdown()
     }
 
     private fun errorName(errorCode: Int): String = when (errorCode) {
