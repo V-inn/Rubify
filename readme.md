@@ -10,7 +10,7 @@ Tap the system **accessibility button** and Rubify takes a silent screenshot, re
 accessibility button tap
   -> AccessibilityService.takeScreenshot()      silent, no dialog or notification
   -> ML Kit Text Recognition v2 (Chinese)       on-device; one bounding box per character
-  -> word segmentation + pinyin lookup          picks the right tone for polyphonic characters (多音字)
+  -> word segmentation + pinyin lookup          in-app dictionary; picks the word's reading for polyphonic characters (多音字)
   -> TYPE_ACCESSIBILITY_OVERLAY window          pass-through, so touches reach the app below
 ```
 
@@ -26,7 +26,7 @@ Early development. Done so far:
 | 1 | Service skeleton: registers the accessibility button and logs taps | Done, verified on device |
 | 2 | Screen capture with `takeScreenshot()`, debug builds save PNGs | Done, verified on device |
 | 3 | OCR with ML Kit (Chinese), per-character bounding boxes | Done, verified on device |
-| 4 | Pinyin with correct tones, with word segmentation | Planned |
+| 4 | Pinyin with correct tones, with word segmentation | Done, verified on device |
 | 5 | Overlay aligned to characters, adjusted for scale and DPI | Planned |
 | 6 | Toggle on second tap, Quick Settings tile | Planned |
 | 7 | Robustness: rotation, scroll and zoom | Planned |
@@ -60,7 +60,7 @@ Create `local.properties` with `sdk.dir=/path/to/Android/Sdk` if `ANDROID_HOME` 
    adb logcat -s Rubify
    ```
 
-   Each tap logs `Accessibility button clicked`, `Screenshot <width>x<height>`, and `OCR in <ms> ms: <lines> lines, <n> hanzi`. Debug builds also log every recognized line (`-s Rubify:D`) and each character with its box and confidence (`-s Rubify:V`). Nothing shows on screen yet, because the overlay arrives in phase 5.
+   Each tap logs `Accessibility button clicked`, `Screenshot <width>x<height>`, `OCR in <ms> ms: <lines> lines, <n> hanzi`, and `Pinyin in <ms> ms`. Debug builds also log every recognized line with its pinyin, like `你(nǐ)好(hǎo)` (`-s Rubify:D`), and each character with its box and confidence (`-s Rubify:V`). Nothing shows on screen yet, because the overlay arrives in phase 5.
 5. Pull the debug images and compare them with the screen:
 
    ```sh
@@ -69,11 +69,30 @@ Create `local.properties` with `sdk.dir=/path/to/Android/Sdk` if `ANDROID_HOME` 
    adb exec-out run-as com.rubify cat files/debug-images/<id>-ocr.png > ocr.png
    ```
 
-   `-ocr.png` is the screenshot with OCR boxes drawn on it: lines in blue, hanzi in red, other characters in gray. Debug builds keep the images of the 5 newest captures. Release builds never write them to disk.
+   `-ocr.png` is the screenshot with OCR boxes drawn on it (lines in blue, hanzi in red, other characters in gray) and each hanzi's pinyin above its box. Debug builds keep the images of the 5 newest captures. Release builds never write them to disk.
 
 Taps are ignored while the previous capture is still being read. The system also allows only about one screenshot per second (`INTERVAL_TIME_SHORT` in the log).
 
-On a Galaxy Tab S9 FE, OCR of a full 1600x2560 screen takes about 550 ms. On a printed textbook page in a brush-style (kai) font, about 95% of characters were read correctly. The confidence score is too noisy to filter out the errors.
+On a Galaxy Tab S9 FE, OCR of a full 1600x2560 screen takes about 550 ms, and pinyin for the whole page about 10 ms. The dictionary loads once, in about 1.7 s, when the service starts. On a printed textbook page in a brush-style (kai) font, about 95% of characters were read correctly. The confidence score is too noisy to filter out the errors.
+
+## Pinyin
+
+Rubify has its own small pinyin engine, because TinyPinyin, the library the plan suggested, has no tones.
+
+- Each run of hanzi is split into words by maximum probability, using jieba's word frequencies (a unigram model). Each word then gets its phrase reading, and characters outside a known phrase get their default reading. This is how 银行 becomes yín háng, 行人 becomes xíng rén, and 我的确不知道 keeps dí què while 你的确认信息 gets de.
+- Readings use tone marks and citation tones. 一 and 不 are always shown as yī and bù, with no tone sandhi (the source data applies sandhi inconsistently). A particle 了 is le and a structural 的 is de.
+- Known limits:
+  - Uncommon words that jieba doesn't know fall back to their characters' default readings. A curated list covers common ones (还书 huán shū, 长得 zhǎng de).
+  - A standalone 过 reads guò, even as an aspect particle.
+  - OCR mistakes carry through to the pinyin.
+
+The dictionary lives in `app/src/main/assets/pinyin/`. It's generated, so don't edit it by hand. To rebuild it (Python 3, downloads pinned sources):
+
+```sh
+python3 tools/pinyin-data/build_pinyin_assets.py
+```
+
+Sources, all MIT licensed (notices ship in `assets/pinyin/LICENSES.txt`): [mozillazg/pinyin-data](https://github.com/mozillazg/pinyin-data), [mozillazg/phrase-pinyin-data](https://github.com/mozillazg/phrase-pinyin-data), and the dictionary of [fxsjy/jieba](https://github.com/fxsjy/jieba).
 
 ## Privacy
 
@@ -90,9 +109,15 @@ app/src/main/java/com/rubify/
   capture/ScreenCapturer.kt            takeScreenshot() into a software bitmap
   ocr/HanziRecognizer.kt               ML Kit Chinese text recognition
   ocr/OcrPage.kt                       OCR result model (pure Kotlin), isHanzi()
+  pinyin/PinyinDictionary.kt           compact dictionary (pure Kotlin)
+  pinyin/WordSegmenter.kt              max-probability word segmentation
+  pinyin/PinyinAnnotator.kt            per-character pinyin for a line
+  pinyin/PinyinAssets.kt               loads the dictionary from assets
   debug/DebugImageStore.kt             debug-only PNG dumps
   debug/OcrDebugRenderer.kt            draws OCR boxes for inspection
+app/src/main/assets/pinyin/          generated pinyin dictionary
 app/src/main/res/xml/accessibility_service_config.xml   service capabilities
+tools/pinyin-data/                   dictionary build script
 ```
 
 Contributor and agent guardrails live in [AGENTS.md](AGENTS.md).

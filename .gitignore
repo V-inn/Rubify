@@ -24,3 +24,7 @@ local.properties
 
 # Claude Code machine-local state
 .claude/settings.local.json
+
+# Downloaded sources for tools/pinyin-data
+tools/pinyin-data/.cache/
+__pycache__/
