@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A pinyin bar above a character practice grid (田). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,31h28a3,3 0,0 1,0 6h-28a3,3 0,0 1,0 -6z" />
+    <path
+        android:pathData="M38.5,45.5h31v31h-31z"
+        android:strokeWidth="5"
+        android:strokeColor="#FFFFFF" />
+    <path
+        android:pathData="M54,48v26M41,61h26"
+        android:strokeWidth="3"
+        android:strokeColor="#FFFFFF" />
+</vector>

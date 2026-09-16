@@ -1,1 +1,26 @@
-~/docs
+# Local working notes and plans. Not part of the published repository.
+/docs/
+
+# Gradle / Android build output
+.gradle/
+.kotlin/
+build/
+*/build/
+.cxx/
+captures/
+*.apk
+*.aab
+
+# Machine-specific
+local.properties
+.idea/
+*.iml
+
+# Signing keys never enter the repository. Release signing reads them from
+# ~/.gradle/gradle.properties.
+*.jks
+*.keystore
+*.p12
+
+# Claude Code machine-local state
+.claude/settings.local.json

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Edge-to-edge (targetSdk 35+) keeps the system bars transparent, so their
+         icons must be told to go dark on the light theme. values-night flips it. -->
+    <style name="Theme.Rubify" parent="@android:style/Theme.DeviceDefault.DayNight">
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+</resources>
