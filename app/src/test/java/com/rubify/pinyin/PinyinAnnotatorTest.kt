@@ -15,8 +15,6 @@ class PinyinAnnotatorTest {
     @Test
     fun polyphonicCharactersFollowTheirWord() {
         assertPinyin("yín háng", "银行")
-        // The example on the website (site/index.html).
-        assertPinyin("wǒ zài yín háng gōng zuò", "我在银行工作")
         assertPinyin("xíng rén", "行人")
         assertPinyin("zhǎng dà", "长大")
         assertPinyin("cháng chéng", "长城")
@@ -76,6 +74,12 @@ class PinyinAnnotatorTest {
             "bù yòng ná cài dān ， zài shǒu jī shàng jiù néng kàn dào",
             "不用拿菜单，在手机上就能看到",
         )
+    }
+
+    @Test
+    fun readsTheWebsiteExample() {
+        // site/index.html shows exactly this pinyin.
+        assertPinyin("nǐ huì dú zhè ge zì ma ？", "你会读这个字吗？")
     }
 
     @Test
