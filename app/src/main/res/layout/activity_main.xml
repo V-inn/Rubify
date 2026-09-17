@@ -35,6 +35,22 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp" />
 
+        <!-- Shown when Android may block the service for a downloaded APK. -->
+        <TextView
+            android:id="@+id/restricted_settings_hint"
+            style="@style/Rubify.Body"
+            android:layout_marginTop="24dp"
+            android:text="@string/restricted_settings_hint"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/open_app_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/open_app_info"
+            android:visibility="gone" />
+
         <TextView
             style="@style/Rubify.Body"
             android:layout_marginTop="32dp"

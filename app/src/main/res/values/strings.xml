@@ -15,6 +15,8 @@
     <string name="review_and_agree">Review and agree</string>
     <string name="privacy_and_consent">Privacy and consent</string>
     <string name="open_source_licenses">Open-source licenses</string>
+    <string name="restricted_settings_hint">Is Rubify greyed out in accessibility settings? Android blocks accessibility for apps installed from a download until you allow it: open App info, tap the ⋮ menu, then Allow restricted settings. Then turn Rubify on again.</string>
+    <string name="open_app_info">Open app info</string>
     <string name="main_tile_hint">In full-screen apps the accessibility button is hidden. Use the Rubify tile in Quick Settings instead.</string>
     <string name="add_tile">Add Quick Settings tile</string>
 
@@ -29,7 +31,7 @@
     <string name="close_pinyin">Close Rubify for now</string>
 
     <!-- Prominent disclosure (ConsentActivity). Changing its meaning requires
-         bumping Consent.DISCLOSURE_VERSION and updating play/. -->
+         bumping Consent.DISCLOSURE_VERSION and updating publishing/. -->
     <string name="consent_title">Before you turn on Rubify</string>
     <string name="consent_intro">Rubify uses an Android accessibility service to show pinyin above Chinese text in any app. Please read how it works before you turn it on.</string>
     <string name="consent_what_heading">What Rubify does</string>

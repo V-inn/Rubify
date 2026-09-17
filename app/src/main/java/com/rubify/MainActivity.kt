@@ -5,7 +5,10 @@ import android.app.Activity
 import android.app.StatusBarManager
 import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.PackageInstaller
+import android.content.pm.PackageManager
 import android.graphics.drawable.Icon
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -29,12 +32,21 @@ class MainActivity : Activity() {
 
     private lateinit var statusView: TextView
     private lateinit var primaryAction: Button
+    private lateinit var restrictedSettingsHint: View
+    private lateinit var openAppInfo: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         statusView = findViewById(R.id.service_status)
         primaryAction = findViewById(R.id.primary_action)
+        restrictedSettingsHint = findViewById(R.id.restricted_settings_hint)
+        openAppInfo = findViewById(R.id.open_app_info)
+        openAppInfo.setOnClickListener {
+            startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null)),
+            )
+        }
 
         val addTile = findViewById<Button>(R.id.add_tile)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -53,13 +65,17 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         val consent = Consent.isGiven(this)
+        val enabled = isServiceEnabled()
         statusView.setText(
             when {
                 !consent -> R.string.status_consent_needed
-                isServiceEnabled() -> R.string.status_enabled
+                enabled -> R.string.status_enabled
                 else -> R.string.status_disabled
             },
         )
+        val hint = if (consent && !enabled && installedFromDownload()) View.VISIBLE else View.GONE
+        restrictedSettingsHint.visibility = hint
+        openAppInfo.visibility = hint
         if (consent) {
             primaryAction.setText(R.string.open_accessibility_settings)
             primaryAction.setOnClickListener {
@@ -83,6 +99,22 @@ class MainActivity : Activity() {
             Icon.createWithResource(this, R.drawable.ic_tile),
             mainExecutor,
         ) { result -> Log.i(LOG_TAG, "Add tile request result: $result") }
+    }
+
+    /**
+     * APKs installed from a browser or file manager get "restricted
+     * settings" on Android 13+: their accessibility service stays greyed out
+     * until the user allows it in App info. Store and adb installs don't.
+     */
+    private fun installedFromDownload(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
+        val source = try {
+            packageManager.getInstallSourceInfo(packageName).packageSource
+        } catch (e: PackageManager.NameNotFoundException) {
+            return false
+        }
+        return source == PackageInstaller.PACKAGE_SOURCE_DOWNLOADED_FILE ||
+            source == PackageInstaller.PACKAGE_SOURCE_LOCAL_FILE
     }
 
     private fun isServiceEnabled(): Boolean {

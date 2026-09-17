@@ -1,4 +1,7 @@
-Rubify uses the following open-source software and data.
+Rubify is open source under the Apache License 2.0:
+https://www.apache.org/licenses/LICENSE-2.0
+
+It uses the following open-source software and data.
 
 ==== Material Icons (Google)
 Icons: refresh, close, visibility, visibility_off.

@@ -34,9 +34,18 @@ Early development. Done so far:
 | 5 | Overlay aligned to characters, adjusted for scale and DPI | Done, verified on device |
 | 6 | Toggle on second tap, Quick Settings tile | Done, verified on device (including full screen). The bubble's hide button replaces the planned auto-hide timeout |
 | 7 | Robustness: rotation, scroll and zoom | Done, verified on device: rotation hides the pinyin and keeps the bubble in place, and Refresh reads portrait or landscape. After scrolling or zooming, you tap Refresh |
-| 8 | Publishing prep: consent screen, store disclosure, Play declaration form | Code done (consent, licenses, signed and shrunk release build). Store texts and forms drafted in `play/`. Account steps pending, see `play/release-checklist.md` |
+| 8 | Publishing prep: consent screen, store disclosure, Play declaration form | Done, verified on device. Store texts and forms are in `publishing/`. GitHub releases are automated. Play account steps are pending (`publishing/release-checklist.md`) |
 
 Not in the MVP: a pipeline that pre-renders pinyin into PDFs, live OCR of handwritten S Pen ink, Cantonese, full translation, and a live camera mode.
+
+## Install
+
+- **GitHub Releases:** download `rubify-<version>-arm64-v8a.apk` from this repository's latest release, or the `universal` APK if unsure. [Obtainium](https://github.com/ImranR98/Obtainium) can keep it updated from the releases.
+- **Google Play:** planned.
+
+After installing, open Rubify, agree to the disclosure, and turn Rubify on in accessibility settings.
+
+> **Greyed out?** Android 13 and newer block accessibility for apps installed from a download. Open **Settings → Apps → Rubify → ⋮ → Allow restricted settings**, then turn Rubify on. The app's main screen has an **Open app info** shortcut for this.
 
 ## Requirements
 
@@ -146,13 +155,20 @@ tools/pinyin-data/                   dictionary build script
 
 ## Publishing
 
-Play Store materials live in `play/`:
-- `listing.md`: store listing, including the accessibility disclosure
+Everything about distribution lives in `publishing/`:
+- `github-releases.md`: signing secrets, tagging a release, what the release contains, install steps for users
+- `release-checklist.md`: upload key, builds, Play Console forms
+- `listing.md`: Play store listing, including the accessibility disclosure
 - `accessibility-declaration.md`: Accessibility API declaration answers and demo video script
-- `data-safety.md`: data safety form answers
+- `data-safety.md`: Play data safety answers
 - `privacy-policy.md`: privacy policy, to host publicly
-- `release-checklist.md`: keys, builds, forms
+
+Automation: `.github/workflows/ci.yml` runs build, tests and lint on every push to `main` and on every pull request. `.github/workflows/release.yml` publishes signed APKs when a `vX.Y` tag is pushed.
 
 Open-source notices are shown in the app under **Open-source licenses**.
 
 Contributor and agent guardrails live in [AGENTS.md](AGENTS.md).
+
+## License
+
+Rubify is licensed under the [Apache License 2.0](LICENSE). Bundled data and libraries keep their own licenses: see **Open-source licenses** in the app, `app/src/main/assets/NOTICES.txt`, and `app/src/main/assets/pinyin/LICENSES.txt`. Google ML Kit is used under the [ML Kit Terms of Service](https://developers.google.com/ml-kit/terms).

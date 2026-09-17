@@ -8,7 +8,7 @@ plugins {
 }
 
 // Release signing, read from ~/.gradle/gradle.properties, never from this
-// repository (see play/release-checklist.md). Without all four values the
+// repository (see publishing/release-checklist.md). Without all four values the
 // release build is produced unsigned, so anyone can still build it.
 val rubifyKeystoreFile = providers.gradleProperty("rubifyKeystoreFile").orNull
 val rubifyKeystorePassword = providers.gradleProperty("rubifyKeystorePassword").orNull
@@ -16,6 +16,11 @@ val rubifyKeyAlias = providers.gradleProperty("rubifyKeyAlias").orNull
 val rubifyKeyPassword = providers.gradleProperty("rubifyKeyPassword").orNull
 val canSignRelease = listOf(rubifyKeystoreFile, rubifyKeystorePassword, rubifyKeyAlias, rubifyKeyPassword)
     .all { it != null } && file(rubifyKeystoreFile!!).exists()
+
+// Per-ABI APKs plus a universal one, for GitHub releases
+// (-PrubifyAbiSplits=true, see publishing/github-releases.md). Off by default,
+// so debug builds and the Play bundle, which Play splits itself, are unaffected.
+val abiSplits = providers.gradleProperty("rubifyAbiSplits").map(String::toBoolean).getOrElse(false)
 
 android {
     namespace = "com.rubify"
@@ -52,6 +57,16 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+        }
+    }
+
+    splits {
+        abi {
+            isEnable = abiSplits
+            reset()
+            // ML Kit's OCR library ships for exactly these four.
+            include("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
+            isUniversalApk = true
         }
     }
 

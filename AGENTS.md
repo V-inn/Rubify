@@ -8,6 +8,10 @@ Rubify is an Android app (Kotlin, plain Views, no Compose). A tap on the accessi
 
 The implementation plan lives in `docs/`. That folder is **gitignored and local only**: it may be missing, and it must never be committed. The existing plan there is in Portuguese. Everything new is written in English.
 
+## License
+
+The repository is public and licensed under Apache-2.0 (`LICENSE`). Anything added must be compatible with it: no GPL code, and no data without a compatible license. New third-party code or data needs an entry in `app/src/main/assets/NOTICES.txt` (or a generated notice file). Never commit copyrighted test material, such as textbook screenshots.
+
 ## Language
 
 Code, identifiers, comments, docs, commit messages and UI strings are all in **English**. User-facing text goes in `res/values/strings.xml`, never hardcoded.
@@ -60,13 +64,21 @@ Play approves the Accessibility API only for a narrow, clearly disclosed purpose
 - A new capability or flag in `res/xml/accessibility_service_config.xml` needs matching updates to the service description string, `readme.md` → Privacy, and the phase 8 disclosure. Ask the user before adding one.
 - Don't switch to `MediaProjection` unless the user decides to.
 
+## Releases
+
+- **GitHub:** pushing a `vX.Y` tag that matches `versionName` runs `.github/workflows/release.yml`, which builds signed per-ABI APKs (`-PrubifyAbiSplits=true`) and publishes them. Signing comes from the `RUBIFY_*` repository secrets, mapped to `ORG_GRADLE_PROJECT_rubifyKeystore*` environment variables. The workflow must keep refusing to publish unsigned APKs. See `publishing/github-releases.md`.
+- **CI** (`ci.yml`) runs `assembleDebug testDebugUnitTest lintDebug` and must stay green.
+- **Workflow changes:** keep `permissions` minimal, never print secrets, and never expose them to `pull_request` runs.
+- **ABI splits stay off by default,** so debug builds and the Play bundle are unaffected.
+- **Every release:** bump `versionCode` by 1 and set `versionName`.
+
 ## Consent and publishing
 
 - **Consent gates everything.** Every path that can capture the screen must check `Consent.isGiven` first: the button, the tile, and anything added later. Without consent, open `ConsentActivity`. `MainActivity` offers accessibility settings only after consent. Withdrawing consent ends the session.
-- If the disclosure strings (`consent_*`), the accessibility description, or what the service does change in meaning, bump `Consent.DISCLOSURE_VERSION` and update `play/` (listing disclosure, accessibility declaration, data safety, privacy policy) in the same change.
+- If the disclosure strings (`consent_*`), the accessibility description, or what the service does change in meaning, bump `Consent.DISCLOSURE_VERSION` and update `publishing/` (listing disclosure, accessibility declaration, data safety, privacy policy) in the same change.
 - The two consent buttons look the same on purpose. Don't nudge the user toward agreeing.
-- Release builds use R8 (`isMinifyEnabled`, `isShrinkResources`). Release signing comes only from `~/.gradle/gradle.properties` (`rubifyKeystore*`). Never create, commit or print keys. Verify release builds on a device, following `play/release-checklist.md`.
-- `play/` is tracked, unlike `docs/`. It holds the Play Console texts, and its placeholders (`<...>`) are for the user to fill in.
+- Release builds use R8 (`isMinifyEnabled`, `isShrinkResources`). Release signing comes only from `~/.gradle/gradle.properties` (`rubifyKeystore*`). Never create, commit or print keys. Verify release builds on a device, following `publishing/release-checklist.md` (Play) or `publishing/github-releases.md`.
+- `publishing/` is tracked and public, unlike `docs/`. It holds the Play Console texts and the GitHub release guide, and its placeholders (`<...>`) are for the user to fill in. Never put secrets or personal data there.
 
 ## Privacy
 
@@ -115,6 +127,7 @@ Test device: Galaxy Tab S9 FE (SM-X610), Android 16 (API 36), One UI, 1600x2560 
 - Tile: `requestAddTileService` returned 2 (added), then 1 (already added). Captures 800 ms and 400 ms after a tile tap were both clean (panel fully closed). `TILE_SETTLE_MS` is 400 ms.
 - Rotation: `onConfigurationChanged` fires on the service. A landscape capture comes back as 2560x1600 and reads fine (OCR about 350 ms).
 - The bubble's placement is stored as fractions of the free space (`BubblePlacement`) in the `control_bubble` preferences, and applied again on rotation.
+- The arm64 split APK (about 16 MB, from `-PrubifyAbiSplits=true`) installs and runs. `adb install` reports `packageSource=1` (OTHER), so the restricted-settings hint in `MainActivity` shows only for `LOCAL_FILE` and `DOWNLOADED_FILE` installs.
 - Release build (R8) runs on device. The dictionary loads in about 320 ms, against 1.4 s in debug. The release APK is 45.9 MB with all ABIs, and the AAB is 21.6 MB.
 - Toasts are suppressed while the app's notifications are off ("Suppressing toast from package com.rubify by user request"), and the user doesn't want status messages anyway. Don't add toasts or notifications for reading results.
 - Labels: text size is 0.4 of the line's median character height (9–28 sp), shrunk per line so neighbouring syllables don't collide.

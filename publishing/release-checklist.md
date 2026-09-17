@@ -1,7 +1,8 @@
-# Release checklist
+# Release checklist (Google Play)
 
 Work through it in order for the first release, and repeat the build and
-verification steps for every release after that.
+verification steps for every release after that. GitHub releases have their
+own guide: `github-releases.md`.
 
 ## One-time setup
 
@@ -18,14 +19,15 @@ verification steps for every release after that.
   rubifyKeyPassword=...
   ```
 - [ ] Create the app in Play Console and use **Play App Signing** (Play holds the app signing key; this key is only the upload key).
-- [ ] Host `play/privacy-policy.md` at a public URL, with the placeholders filled in.
+- [ ] Personal developer accounts must run a closed test with at least 12 testers opted in for 14 consecutive days before production access. Recruit them (friends, a study group, tester-exchange communities) and meanwhile distribute through GitHub releases.
+- [ ] Host `publishing/privacy-policy.md` at a public URL, with the placeholders filled in.
 - [ ] Decide how to show ML Kit's third-party notices. The AARs ship a `third_party_licenses.txt` that isn't packaged today. Options: the `oss-licenses` Gradle plugin, which adds a library and an activity, or a build step that copies the notices into the assets for `LicensesActivity`.
-- [ ] Settle the store listing (`play/listing.md`) and fill in its placeholders.
+- [ ] Settle the store listing (`publishing/listing.md`) and fill in its placeholders.
 
 ## Every release
 
 - [ ] Bump `versionCode` (+1, never reused) and `versionName` in `app/build.gradle.kts`.
-- [ ] If the disclosure strings changed in meaning, bump `Consent.DISCLOSURE_VERSION` and update `play/`.
+- [ ] If the disclosure strings changed in meaning, bump `Consent.DISCLOSURE_VERSION` and update `publishing/`.
 - [ ] Build and check:
   ```sh
   ./gradlew clean testDebugUnitTest lintRelease bundleRelease
@@ -44,8 +46,8 @@ verification steps for every release after that.
 
 ## Play Console forms (first release, and whenever the answers change)
 
-- [ ] Accessibility API declaration and demo video: `play/accessibility-declaration.md`
-- [ ] Data safety: `play/data-safety.md`
+- [ ] Accessibility API declaration and demo video: `publishing/accessibility-declaration.md`
+- [ ] Data safety: `publishing/data-safety.md`
 - [ ] Privacy policy URL
 - [ ] App access: no login. Give reviewers the steps to enable the service: open Rubify → Agree → Open accessibility settings → Rubify → On, then use the accessibility button on any page with Chinese text.
 - [ ] Content rating questionnaire (education, no user content, no ads)
