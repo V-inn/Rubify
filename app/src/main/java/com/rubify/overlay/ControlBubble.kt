@@ -2,8 +2,8 @@ package com.rubify.overlay
 
 import android.accessibilityservice.AccessibilityService
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.PixelFormat
-import android.graphics.Point
 import android.graphics.Rect
 import android.view.ContextThemeWrapper
 import android.view.Gravity
@@ -20,8 +20,8 @@ import kotlin.math.hypot
 /**
  * The small floating bubble shown with the pinyin: Refresh reads the screen
  * again (after scrolling, say), the eye hides or shows the pinyin, Close ends
- * the session. Dragging any button moves the bubble; its position is kept
- * while the service runs.
+ * the session. Dragging any button moves the bubble. Its position is saved
+ * as a fraction of the screen, so it survives rotations and restarts.
  * Touches outside the bubble go to the app underneath. Main thread only.
  */
 class ControlBubble(
@@ -32,8 +32,9 @@ class ControlBubble(
 ) {
 
     private val windowManager = service.getSystemService(WindowManager::class.java)
+    private val prefs = service.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    private val margin = (MARGIN_DP * service.resources.displayMetrics.density).toInt()
     private var view: View? = null
-    private var position: Point? = null
 
     val isShowing: Boolean get() = view != null
 
@@ -53,9 +54,11 @@ class ControlBubble(
         root.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
         val params = layoutParams()
         val screen = windowManager.maximumWindowMetrics.bounds
-        val start = position ?: defaultPosition(screen, root)
-        params.x = start.x.coerceIn(0, maxOf(0, screen.width() - root.measuredWidth))
-        params.y = start.y.coerceIn(0, maxOf(0, screen.height() - root.measuredHeight))
+        val (x, y) = savedPlacement().toPixels(
+            screen.width(), screen.height(), root.measuredWidth, root.measuredHeight, margin,
+        )
+        params.x = x
+        params.y = y
 
         val drag = DragToMove(root, params, screen)
         root.findViewById<View>(R.id.refresh).apply {
@@ -91,7 +94,10 @@ class ControlBubble(
         windowManager.removeViewImmediate(current)
     }
 
-    /** Re-adds the bubble so it sits above a window added after it. */
+    /**
+     * Re-adds the bubble so it sits above a window added after it, or is
+     * placed again for a rotated display.
+     */
     fun bringToFront() {
         val current = view ?: return
         val pinyinVisible = current.findViewById<View>(R.id.toggle_pinyin).tag as? Boolean ?: true
@@ -99,9 +105,21 @@ class ControlBubble(
         show(pinyinVisible)
     }
 
-    private fun defaultPosition(screen: Rect, root: View): Point {
-        val margin = (MARGIN_DP * service.resources.displayMetrics.density).toInt()
-        return Point(screen.width() - root.measuredWidth - margin, screen.height() * 2 / 5)
+    private fun savedPlacement(): BubblePlacement =
+        if (prefs.contains(KEY_X) && prefs.contains(KEY_Y)) {
+            BubblePlacement(prefs.getFloat(KEY_X, 1f), prefs.getFloat(KEY_Y, 0.4f))
+        } else {
+            BubblePlacement.DEFAULT
+        }
+
+    // The edit {} helper lives in core-ktx, which the app doesn't depend on;
+    // one call isn't worth adding it.
+    @SuppressLint("UseKtx")
+    private fun savePlacement(root: View, params: LayoutParams, screen: Rect) {
+        val placement = BubblePlacement.fromPixels(
+            params.x, params.y, screen.width(), screen.height(), root.width, root.height, margin,
+        )
+        prefs.edit().putFloat(KEY_X, placement.x).putFloat(KEY_Y, placement.y).apply()
     }
 
     private fun layoutParams() = LayoutParams(
@@ -149,15 +167,16 @@ class ControlBubble(
                         v.isPressed = false
                     }
                     if (dragging && view === root) {
-                        params.x = (startX + dx.toInt()).coerceIn(0, maxOf(0, screen.width() - root.width))
-                        params.y = (startY + dy.toInt()).coerceIn(0, maxOf(0, screen.height() - root.height))
+                        params.x = (startX + dx.toInt())
+                            .coerceIn(BubblePlacement.range(screen.width(), root.width, margin))
+                        params.y = (startY + dy.toInt())
+                            .coerceIn(BubblePlacement.range(screen.height(), root.height, margin))
                         windowManager.updateViewLayout(root, params)
-                        position = Point(params.x, params.y)
                     }
                 }
                 MotionEvent.ACTION_UP -> {
                     v.isPressed = false
-                    if (!dragging) v.performClick()
+                    if (dragging) savePlacement(root, params, screen) else v.performClick()
                 }
                 MotionEvent.ACTION_CANCEL -> v.isPressed = false
             }
@@ -167,5 +186,8 @@ class ControlBubble(
 
     private companion object {
         const val MARGIN_DP = 12
+        const val PREFS = "control_bubble"
+        const val KEY_X = "x"
+        const val KEY_Y = "y"
     }
 }

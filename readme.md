@@ -14,7 +14,7 @@ accessibility button tap
   -> TYPE_ACCESSIBILITY_OVERLAY window          pass-through, so touches reach the app below
 ```
 
-- Along with the pinyin comes a small floating bubble you can drag anywhere:
+- Along with the pinyin comes a small floating bubble you can drag anywhere. It remembers its spot, relative to the screen, across rotations and restarts.
   - **↻ Refresh** reads the screen again, for example after you scroll.
   - **Eye** hides the pinyin or brings the same pinyin back, without reading again.
   - **✕ Close** ends the session. Tapping the accessibility button again does the same.
@@ -33,7 +33,7 @@ Early development. Done so far:
 | 4 | Pinyin with correct tones, with word segmentation | Done, verified on device |
 | 5 | Overlay aligned to characters, adjusted for scale and DPI | Done, verified on device |
 | 6 | Toggle on second tap, Quick Settings tile | Done, verified on device (including full screen). The bubble's hide button replaces the planned auto-hide timeout |
-| 7 | Robustness: rotation, scroll and zoom | Partly done: rotation hides the pinyin, and after scrolling you tap Refresh (see below) |
+| 7 | Robustness: rotation, scroll and zoom | Done, verified on device: rotation hides the pinyin and keeps the bubble in place, and Refresh reads portrait or landscape. After scrolling or zooming, you tap Refresh |
 | 8 | Publishing prep: consent screen, store disclosure, Play declaration form | Planned |
 
 Not in the MVP: a pipeline that pre-renders pinyin into PDFs, live OCR of handwritten S Pen ink, Cantonese, full translation, and a live camera mode.
@@ -79,6 +79,12 @@ Create `local.properties` with `sdk.dir=/path/to/Android/Sdk` if `ANDROID_HOME` 
 Tapping the accessibility button during a reading cancels it. The system allows only about one screenshot per second (`INTERVAL_TIME_SHORT` in the log). Rubify retries a failed capture up to twice.
 
 On a Galaxy Tab S9 FE, OCR of a full 1600x2560 screen takes about 550 ms, and pinyin for the whole page about 10 ms. The dictionary loads once, in about 1.7 s, when the service starts. On a printed textbook page in a brush-style (kai) font, about 95% of characters were read correctly. The confidence score is too noisy to filter out the errors.
+
+## Known limits
+
+- **Scrolling and zooming aren't followed automatically.** The pinyin stays where it was until you tap Refresh. Samsung Notes reports no scroll events, and the other ways to notice movement (content-change events, repeated screenshots) would weaken the privacy story.
+- **Switching apps doesn't hide the pinyin.** It stays on top of the next app until you close it or tap the button or tile, for the same reason.
+- **OCR errors carry through.** Brush-style (kai) fonts are the hardest.
 
 ## Pinyin
 

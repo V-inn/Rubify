@@ -293,7 +293,10 @@ class RubifyAccessibilityService : AccessibilityService(), ReadingSession.Host {
         super.onConfigurationChanged(newConfig)
         if (newConfig.orientation != orientation) {
             orientation = newConfig.orientation
+            Log.i(LOG_TAG, "Orientation changed to $orientation")
             session.onScreenMoved()
+            // Place the bubble again for the new screen shape.
+            controls?.bringToFront()
         }
     }
 

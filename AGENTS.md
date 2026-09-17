@@ -78,7 +78,7 @@ com.rubify
   ocr/       ML Kit wrapper + pure OcrPage model (per-char boxes)
   debug/     debug-only image dumps (JPEG) and OCR box rendering
   pinyin/    dictionary, max-probability segmentation, annotator
-  overlay/   pure label layout; touch-through pinyin window; control bubble
+  overlay/   pure label layout and bubble placement; touch-through pinyin window; control bubble
   tile/      Quick Settings tile (second trigger)
 ```
 
@@ -103,7 +103,10 @@ Test device: Galaxy Tab S9 FE (SM-X610), Android 16 (API 36), One UI, 1600x2560 
 - The accessibility-button chooser makes fast repeated taps impossible, so the tap-dropped path hasn't been seen on a device yet.
 - The pinyin dictionary (about 155k words) loads in about 1.7 s at service start. Annotating a full page takes about 10 ms.
 - Overlay: the full-screen `TYPE_ACCESSIBILITY_OVERLAY` window sits at (0, 0) at 1600x2560, so the screenshot-to-overlay mapping is 1:1. Its own `rootWindowInsets` are all zero, so status bar insets come from `WindowManager.currentWindowMetrics` (top 64 px here). `maximumWindowMetrics` works from the service.
-- Tile: `requestAddTileService` returned 2 (added), then 1 (already added). From the tile, a capture 800 ms after the tap was clean (panel fully closed, full-screen Notes). `TILE_SETTLE_MS` is now 400 ms at the user's request.
+- Tile: `requestAddTileService` returned 2 (added), then 1 (already added). Captures 800 ms and 400 ms after a tile tap were both clean (panel fully closed). `TILE_SETTLE_MS` is 400 ms.
+- Rotation: `onConfigurationChanged` fires on the service. A landscape capture comes back as 2560x1600 and reads fine (OCR about 350 ms).
+- The bubble's placement is stored as fractions of the free space (`BubblePlacement`) in the `control_bubble` preferences, and applied again on rotation.
+- Toasts are suppressed while the app's notifications are off ("Suppressing toast from package com.rubify by user request"), and the user doesn't want status messages anyway. Don't add toasts or notifications for reading results.
 - Labels: text size is 0.4 of the line's median character height (9–28 sp), shrunk per line so neighbouring syllables don't collide.
 - Accessibility events (tried, then removed):
   - Subscribing to event types at runtime makes the foreground app send a `TYPE_WINDOW_STATE_CHANGED` for itself right away.
