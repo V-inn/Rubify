@@ -10,9 +10,10 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 /**
- * Debug builds only: keeps the images of the last few captures as PNGs in
- * app-private storage, named `<captureId>-<kind>.png`. Pull one with
- * `adb exec-out run-as com.rubify cat files/debug-images/<name>.png > out.png`.
+ * Debug builds only: keeps the images of the last few captures as JPEGs in
+ * app-private storage, named `<captureId>-<kind>.jpg`. JPEG because PNG
+ * encoding a full screen takes ~0.8 s on device. Pull one with
+ * `adb exec-out run-as com.rubify cat files/debug-images/<name>.jpg > out.jpg`.
  */
 class DebugImageStore(context: Context) {
 
@@ -26,11 +27,11 @@ class DebugImageStore(context: Context) {
             Log.w(LOG_TAG, "Cannot create ${dir.absolutePath}")
             return null
         }
-        val file = File(dir, "$captureId-$kind.png")
+        val file = File(dir, "$captureId-$kind.jpg")
         return try {
             file.outputStream().buffered().use { out ->
-                if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)) {
-                    throw IOException("PNG encoding failed")
+                if (!bitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, out)) {
+                    throw IOException("JPEG encoding failed")
                 }
             }
             prune()
@@ -51,11 +52,12 @@ class DebugImageStore(context: Context) {
     companion object {
         const val DIR_NAME = "debug-images"
         private const val KEEP_CAPTURES = 5
+        private const val JPEG_QUALITY = 90
         private val ID_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss-SSS")
     }
 }
 
-private val DEBUG_IMAGE_NAME = Regex("""^(\d{8}-\d{6}-\d{3})-[a-z]+\.png$""")
+private val DEBUG_IMAGE_NAME = Regex("""^(\d{8}-\d{6}-\d{3})-[a-z]+\.(png|jpg)$""")
 
 /**
  * Names of the images to delete so that only the newest [keepCaptures]

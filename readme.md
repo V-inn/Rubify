@@ -14,8 +14,12 @@ accessibility button tap
   -> TYPE_ACCESSIBILITY_OVERLAY window          pass-through, so touches reach the app below
 ```
 
-- A second tap hides the annotations. They also hide on a timeout.
-- A Quick Settings tile is the fallback trigger for full-screen apps, which hide the navigation bar and the accessibility button with it.
+- Along with the pinyin comes a small floating bubble you can drag anywhere:
+  - **↻ Refresh** reads the screen again, for example after you scroll.
+  - **Eye** hides the pinyin or brings the same pinyin back, without reading again.
+  - **✕ Close** ends the session. Tapping the accessibility button again does the same.
+- Rotating the screen hides the pinyin, because it no longer lines up. Use Refresh to bring it back.
+- Planned: a Quick Settings tile as a fallback trigger for full-screen apps, which hide the navigation bar and the accessibility button with it.
 
 ## Status
 
@@ -27,9 +31,9 @@ Early development. Done so far:
 | 2 | Screen capture with `takeScreenshot()`, debug builds save PNGs | Done, verified on device |
 | 3 | OCR with ML Kit (Chinese), per-character bounding boxes | Done, verified on device |
 | 4 | Pinyin with correct tones, with word segmentation | Done, verified on device |
-| 5 | Overlay aligned to characters, adjusted for scale and DPI | Planned |
-| 6 | Toggle on second tap, Quick Settings tile | Planned |
-| 7 | Robustness: rotation, scroll and zoom | Planned |
+| 5 | Overlay aligned to characters, adjusted for scale and DPI | Done, verified on device |
+| 6 | Toggle on second tap, Quick Settings tile | Partly done: a second tap ends the session and the bubble can hide or close the pinyin. Still to do: the tile, and hiding on a timeout |
+| 7 | Robustness: rotation, scroll and zoom | Partly done: rotation hides the pinyin, and after scrolling you tap Refresh (see below) |
 | 8 | Publishing prep: consent screen, store disclosure, Play declaration form | Planned |
 
 Not in the MVP: a pipeline that pre-renders pinyin into PDFs, live OCR of handwritten S Pen ink, Cantonese, full translation, and a live camera mode.
@@ -60,18 +64,18 @@ Create `local.properties` with `sdk.dir=/path/to/Android/Sdk` if `ANDROID_HOME` 
    adb logcat -s Rubify
    ```
 
-   Each tap logs `Accessibility button clicked`, `Screenshot <width>x<height>`, `OCR in <ms> ms: <lines> lines, <n> hanzi`, and `Pinyin in <ms> ms`. Debug builds also log every recognized line with its pinyin, like `你(nǐ)好(hǎo)` (`-s Rubify:D`), and each character with its box and confidence (`-s Rubify:V`). Nothing shows on screen yet, because the overlay arrives in phase 5.
+   Pinyin appears above the characters, with the control bubble at the right edge. Each reading logs `Accessibility button clicked` (for button taps), `Screenshot <width>x<height>`, `OCR in <ms> ms: <lines> lines, <n> hanzi`, `Pinyin in <ms> ms`, and `Overlay shown with <n> labels`. Debug builds also log every recognized line with its pinyin, like `你(nǐ)好(hǎo)` (`-s Rubify:D`), and each character with its box and confidence (`-s Rubify:V`). 
 5. Pull the debug images and compare them with the screen:
 
    ```sh
    adb shell run-as com.rubify ls files/debug-images
-   adb exec-out run-as com.rubify cat files/debug-images/<id>-screenshot.png > shot.png
-   adb exec-out run-as com.rubify cat files/debug-images/<id>-ocr.png > ocr.png
+   adb exec-out run-as com.rubify cat files/debug-images/<id>-screenshot.jpg > shot.jpg
+   adb exec-out run-as com.rubify cat files/debug-images/<id>-ocr.jpg > ocr.jpg
    ```
 
-   `-ocr.png` is the screenshot with OCR boxes drawn on it (lines in blue, hanzi in red, other characters in gray) and each hanzi's pinyin above its box. Debug builds keep the images of the 5 newest captures. Release builds never write them to disk.
+   `-ocr.jpg` is the screenshot with OCR boxes drawn on it (lines in blue, hanzi in red, other characters in gray) and each hanzi's pinyin above its box. Debug builds keep the images of the 5 newest captures. Release builds never write them to disk.
 
-Taps are ignored while the previous capture is still being read. The system also allows only about one screenshot per second (`INTERVAL_TIME_SHORT` in the log).
+Tapping the accessibility button during a reading cancels it. The system allows only about one screenshot per second (`INTERVAL_TIME_SHORT` in the log). Rubify retries a failed capture up to twice.
 
 On a Galaxy Tab S9 FE, OCR of a full 1600x2560 screen takes about 550 ms, and pinyin for the whole page about 10 ms. The dictionary loads once, in about 1.7 s, when the service starts. On a printed textbook page in a brush-style (kai) font, about 95% of characters were read correctly. The confidence score is too noisy to filter out the errors.
 
@@ -96,7 +100,8 @@ Sources, all MIT licensed (notices ship in `assets/pinyin/LICENSES.txt`): [mozil
 
 ## Privacy
 
-- Rubify acts only when you tap. It subscribes to no accessibility events and cannot read window content.
+- Rubify reads the screen only when you tap: the accessibility button, or Refresh (or Show, after a rotation) on its bubble. It subscribes to no accessibility events and cannot read window content.
+- The pinyin and the bubble live in accessibility overlay windows. The pinyin window ignores touches, so everything you do goes to the app underneath. Only the bubble itself takes touches.
 - Everything runs on the device, with the OCR model bundled in the app. The app does not request the `INTERNET` permission. ML Kit's library asks for it (to send usage stats), so the manifest removes it, and the build fails if any network permission shows up.
 - Screenshots stay in memory and are discarded after processing (debug builds are the only exception, see above). Backup and device transfer are disabled.
 
@@ -105,7 +110,8 @@ Sources, all MIT licensed (notices ship in `assets/pinyin/LICENSES.txt`): [mozil
 ```
 app/src/main/java/com/rubify/
   MainActivity.kt                      service status and link to settings
-  service/RubifyAccessibilityService.kt  accessibility button callback, capture -> OCR
+  service/RubifyAccessibilityService.kt  button callback, windows, capture -> OCR -> pinyin
+  service/ReadingSession.kt            when to read and what to show (pure Kotlin)
   capture/ScreenCapturer.kt            takeScreenshot() into a software bitmap
   ocr/HanziRecognizer.kt               ML Kit Chinese text recognition
   ocr/OcrPage.kt                       OCR result model (pure Kotlin), isHanzi()
@@ -113,7 +119,10 @@ app/src/main/java/com/rubify/
   pinyin/WordSegmenter.kt              max-probability word segmentation
   pinyin/PinyinAnnotator.kt            per-character pinyin for a line
   pinyin/PinyinAssets.kt               loads the dictionary from assets
-  debug/DebugImageStore.kt             debug-only PNG dumps
+  overlay/PinyinLayout.kt              label placement and sizing (pure Kotlin)
+  overlay/PinyinOverlay.kt             full-screen, touch-through pinyin window
+  overlay/ControlBubble.kt             draggable refresh / hide / close bubble
+  debug/DebugImageStore.kt             debug-only JPEG dumps
   debug/OcrDebugRenderer.kt            draws OCR boxes for inspection
 app/src/main/assets/pinyin/          generated pinyin dictionary
 app/src/main/res/xml/accessibility_service_config.xml   service capabilities

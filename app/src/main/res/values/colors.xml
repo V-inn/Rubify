@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#B71C1C</color>
+
+    <!-- Overlay: pinyin pills and the control bubble. Light in both themes,
+         since they sit on top of whatever the app underneath draws. -->
+    <color name="overlay_text">#0D3B91</color>
+    <color name="overlay_background">#DEFFFFFF</color>
+    <color name="overlay_outline">#33000000</color>
 </resources>

@@ -48,7 +48,11 @@ AGP **8.11.1**, Kotlin **2.2.20**, Gradle **8.13**, compile/target SDK **36**, J
 
 Play approves the Accessibility API only for a narrow, clearly disclosed purpose, so the service must stay minimal.
 
-- **Act only on explicit user triggers**: the accessibility button callback and, from phase 6, the Quick Settings tile. Nothing runs in the background.
+- **Act only on explicit user triggers**: the accessibility button, the control bubble, and from phase 6 the Quick Settings tile. Nothing runs in the background.
+- **Never capture the screen on a timer or on events.** Refresh after scrolling is a bubble tap by design. Automatic refresh was tried on 2026-09-16 and dropped:
+  - Samsung Notes sends no `TYPE_VIEW_SCROLLED`, only noisy `TYPE_WINDOW_CONTENT_CHANGED`.
+  - The alternatives (content-change events, periodic screenshot diffs) weaken the Play position.
+  - Revisit only with the user's approval.
 - **No `accessibilityEventTypes`**, no event handling in `onAccessibilityEvent`, and no `canRetrieveWindowContent`. Never read `AccessibilityNodeInfo` trees.
 - **No `android:isAccessibilityTool="true"`**. Rubify is a study aid, not an assistive tool. It goes through disclosure and consent instead.
 - A new capability or flag in `res/xml/accessibility_service_config.xml` needs matching updates to the service description string, `readme.md` → Privacy, and the phase 8 disclosure. Ask the user before adding one.
@@ -59,6 +63,7 @@ Play approves the Accessibility API only for a narrow, clearly disclosed purpose
 - **On-device only.** Never add the `INTERNET` permission, analytics, crash reporting, or any network client without explicit approval. The user prefers no network but accepts it if something truly requires it. Ask first.
 - ML Kit's telemetry transport merges `INTERNET` and `ACCESS_NETWORK_STATE`. `AndroidManifest.xml` removes both with `tools:node="remove"`, and OCR works without them (verified on device). The `verify<Variant>NoNetworkPermission` task in `app/build.gradle.kts` fails any build whose merged manifest requests a network permission. Don't weaken it.
 - Screenshots live in memory. Whoever receives a `Bitmap` owns it and must `recycle()` it when done (see `RubifyAccessibilityService.onScreenshot`).
+- Our own windows must never be in a screenshot. Hide the pinyin and the bubble before any capture (`ReadingSession.REFRESH_SETTLE_MS`).
 - Only `BuildConfig.DEBUG` builds may write screen content to disk, and only to app-private storage (`debug/DebugImageStore`). Release builds never persist it. The same applies to logging recognized text.
 - Backup and device transfer stay disabled (`backup_rules.xml`, `data_extraction_rules.xml`).
 
@@ -66,18 +71,18 @@ Play approves the Accessibility API only for a narrow, clearly disclosed purpose
 
 ```
 com.rubify
-  service/   AccessibilityService: button callback, pipeline wiring
+  service/   AccessibilityService (wiring, windows) + pure ReadingSession state machine
   capture/   takeScreenshot() into a software bitmap
   ocr/       ML Kit wrapper + pure OcrPage model (per-char boxes)
-  debug/     debug-only image dumps and OCR box rendering
+  debug/     debug-only image dumps (JPEG) and OCR box rendering
   pinyin/    dictionary, max-probability segmentation, annotator
-  overlay/   TYPE_ACCESSIBILITY_OVERLAY, FLAG_NOT_TOUCHABLE     (phase 5)
+  overlay/   pure label layout; touch-through pinyin window; control bubble
   tile/      TileService fallback trigger                       (phase 6)
 ```
 
 - Keep the service thin. Logic goes in its own package.
-- Keep pure logic free of Android imports so plain JUnit can test it on the JVM: pinyin choice for polyphonic characters (多音字), mapping from screenshot pixels to overlay coordinates (density, rotation), and retention rules. Every such unit gets tests in `app/src/test`. Don't use Robolectric unless it becomes unavoidable.
-- No heavy work on the main thread. Pipeline callbacks run on the `rubify-worker` HandlerThread, one at a time, and ML Kit runs on its own threads. A single `reading` flag in the service spans capture, OCR and pinyin, so a tap is dropped while a reading is in progress.
+- Keep pure logic free of Android imports so plain JUnit can test it on the JVM: pinyin choice for polyphonic characters (多音字), screenshot-to-overlay mapping and label layout (`PinyinLayout`), session behavior (`ReadingSession`), and retention rules. Every such unit gets tests in `app/src/test`. Don't use Robolectric unless it becomes unavoidable.
+- No heavy work on the main thread. Pipeline callbacks run on the `rubify-worker` HandlerThread, one at a time, and ML Kit runs on its own threads. `ReadingSession` decides on the main thread. Each reading carries a generation number, and results from before a refresh, a rotation or the end of the session are dropped.
 - The pinyin dictionary loads on the worker as the first queued task after connect, so readings queued later always see it. `annotator` is confined to the worker.
 - Bitmap ownership is explicit. Don't recycle a bitmap before every async consumer's callback has run. Queue those callbacks on the worker so they run after any synchronous work that still uses the bitmap.
 - Log through `LOG_TAG`. Never log recognized text in release builds.
@@ -94,9 +99,12 @@ Test device: Galaxy Tab S9 FE (SM-X610), Android 16 (API 36), One UI, 1600x2560 
 - Symbol `confidence` is weak. Every wrong character was below 0.5, but about 20% of all characters were too, many of them correct. Don't use it as a hard filter. Word context (phase 4) is the better signal.
 - The accessibility-button chooser makes fast repeated taps impossible, so the tap-dropped path hasn't been seen on a device yet.
 - The pinyin dictionary (about 155k words) loads in about 1.7 s at service start. Annotating a full page takes about 10 ms.
-- Notes for the phase 5 overlay, from the debug render:
-  - Syllables centered on narrow character boxes collide (就能), so fit text to the box width.
-  - Box heights vary per character, so size text from the line box to keep it even.
+- Overlay: the full-screen `TYPE_ACCESSIBILITY_OVERLAY` window sits at (0, 0) at 1600x2560, so the screenshot-to-overlay mapping is 1:1. Its own `rootWindowInsets` are all zero, so status bar insets come from `WindowManager.currentWindowMetrics` (top 64 px here). `maximumWindowMetrics` works from the service.
+- Labels: text size is 0.4 of the line's median character height (9–28 sp), shrunk per line so neighbouring syllables don't collide.
+- Accessibility events (tried, then removed):
+  - Subscribing to event types at runtime makes the foreground app send a `TYPE_WINDOW_STATE_CHANGED` for itself right away.
+  - The keyboard (`com.samsung.android.honeyboard`) also counts as a window-state change.
+  - Samsung Notes sends no scroll events at all.
 
 ## Working in phases
 

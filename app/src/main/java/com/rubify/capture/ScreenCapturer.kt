@@ -26,16 +26,13 @@ class ScreenCapturer(
     private val mainHandler = Handler(Looper.getMainLooper())
 
     /**
-     * Captures the default display after [SETTLE_DELAY_MS]. Exactly one of
-     * the callbacks runs, on the executor. [onCaptured] receives a software
+     * Captures the default display after [settleDelayMs]. Exactly one of the
+     * callbacks runs, on the executor. [onCaptured] receives a software
      * ARGB_8888 bitmap in physical device pixels and takes ownership of it
      * (must recycle).
      */
-    fun capture(onCaptured: (Bitmap) -> Unit, onFailed: () -> Unit) {
-        // When another service also uses the accessibility button, the tap
-        // opens a system chooser. Capturing right away (measured: ~50 ms after
-        // the click) records the chooser and its dim scrim over the content.
-        mainHandler.postDelayed({ takeScreenshot(onCaptured, onFailed) }, SETTLE_DELAY_MS)
+    fun capture(settleDelayMs: Long, onCaptured: (Bitmap) -> Unit, onFailed: () -> Unit) {
+        mainHandler.postDelayed({ takeScreenshot(onCaptured, onFailed) }, settleDelayMs)
     }
 
     private fun takeScreenshot(onCaptured: (Bitmap) -> Unit, onFailed: () -> Unit) {
@@ -74,7 +71,7 @@ class ScreenCapturer(
         }
     }
 
-    /** Cancels a capture that is still waiting for [SETTLE_DELAY_MS]. */
+    /** Cancels a capture that is still waiting for its settle delay. */
     fun shutdown() {
         mainHandler.removeCallbacksAndMessages(null)
     }
@@ -86,10 +83,5 @@ class ScreenCapturer(
         AccessibilityService.ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT -> "INTERVAL_TIME_SHORT"
         AccessibilityService.ERROR_TAKE_SCREENSHOT_INVALID_DISPLAY -> "INVALID_DISPLAY"
         else -> "error code $errorCode"
-    }
-
-    private companion object {
-        /** Long enough for the button chooser to finish its dismiss animation. */
-        const val SETTLE_DELAY_MS = 400L
     }
 }

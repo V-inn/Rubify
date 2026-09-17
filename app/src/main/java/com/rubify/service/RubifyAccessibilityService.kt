@@ -3,9 +3,11 @@ package com.rubify.service
 import android.accessibilityservice.AccessibilityButtonController
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
@@ -17,29 +19,30 @@ import com.rubify.debug.OcrDebugRenderer
 import com.rubify.ocr.HanziRecognizer
 import com.rubify.ocr.OcrPage
 import com.rubify.ocr.describeChars
+import com.rubify.overlay.ControlBubble
+import com.rubify.overlay.OverlayContent
+import com.rubify.overlay.PinyinOverlay
+import com.rubify.overlay.overlayContentOf
 import com.rubify.pinyin.PinyinAnnotator
 import com.rubify.pinyin.PinyinAssets
 import java.util.concurrent.Executor
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Reacts to exactly one thing: a tap on the accessibility button. It subscribes
- * to no accessibility events and cannot read window content (see
+ * Reads the screen when the user asks: the accessibility button, or the
+ * control bubble (see [ReadingSession]). It subscribes to no
+ * accessibility events and cannot read window content (see
  * res/xml/accessibility_service_config.xml).
  *
- * A tap runs one reading: capture, OCR, then pinyin. Taps during a reading
- * are dropped.
+ * A reading is capture, OCR, pinyin, overlay. Its steps run on the worker;
+ * session state and the overlay windows live on the main thread.
  */
-class RubifyAccessibilityService : AccessibilityService() {
+class RubifyAccessibilityService : AccessibilityService(), ReadingSession.Host {
 
     private var buttonController: AccessibilityButtonController? = null
     private var workerThread: HandlerThread? = null
     private var screenCapturer: ScreenCapturer? = null
     private var recognizer: HanziRecognizer? = null
     private var debugStore: DebugImageStore? = null
-
-    /** Worker-confined: set by the load task queued first on the worker. */
-    private var annotator: PinyinAnnotator? = null
 
     /**
      * Pipeline callbacks run here, one at a time. A Handler-backed executor
@@ -48,7 +51,16 @@ class RubifyAccessibilityService : AccessibilityService() {
      */
     private var worker: Executor? = null
 
-    private val reading = AtomicBoolean(false)
+    /** Worker-confined: set by the load task queued first on the worker. */
+    private var annotator: PinyinAnnotator? = null
+
+    // Main-thread confined.
+    private var overlay: PinyinOverlay? = null
+    private var controls: ControlBubble? = null
+    private val session = ReadingSession(this)
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var scheduledAction: Runnable? = null
+    private var orientation = Configuration.ORIENTATION_UNDEFINED
 
     /**
      * Last known button availability. The button disappears in full-screen
@@ -62,7 +74,7 @@ class RubifyAccessibilityService : AccessibilityService() {
     private val buttonCallback = object : AccessibilityButtonController.AccessibilityButtonCallback() {
         override fun onClicked(controller: AccessibilityButtonController) {
             Log.i(LOG_TAG, "Accessibility button clicked")
-            startReading()
+            session.onButtonClicked()
         }
 
         override fun onAvailabilityChanged(
@@ -85,6 +97,14 @@ class RubifyAccessibilityService : AccessibilityService() {
         executor.execute(::loadPinyinDictionary)
         screenCapturer = ScreenCapturer(this, executor)
         recognizer = HanziRecognizer()
+        overlay = PinyinOverlay(this)
+        controls = ControlBubble(
+            this,
+            onRefresh = session::onRefreshRequested,
+            onTogglePinyin = session::onTogglePinyinRequested,
+            onClose = session::onCloseRequested,
+        )
+        orientation = resources.configuration.orientation
         if (BuildConfig.DEBUG) debugStore = DebugImageStore(this)
 
         val controller = accessibilityButtonController
@@ -110,41 +130,82 @@ class RubifyAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun startReading() {
+    // ReadingSession.Host, all on the main thread.
+
+    override fun startReading(generation: Int, settleDelayMs: Long) {
         val capturer = screenCapturer ?: return
-        if (!reading.compareAndSet(false, true)) {
-            Log.i(LOG_TAG, "Still reading the previous capture, tap dropped")
-            return
-        }
-        capturer.capture(onCaptured = ::onScreenshot, onFailed = { reading.set(false) })
+        capturer.capture(
+            settleDelayMs,
+            onCaptured = { bitmap -> onScreenshot(bitmap, generation) },
+            onFailed = { mainHandler.post { session.onReadingFailed(generation) } },
+        )
     }
 
-    /** Runs on the worker. Owns [bitmap] and must recycle it. */
-    private fun onScreenshot(bitmap: Bitmap) {
+    override fun showPinyin(content: OverlayContent) {
+        overlay?.show(content)
+        controls?.bringToFront()
+    }
+
+    override fun hidePinyin() {
+        overlay?.hide()
+    }
+
+    override fun showControls(pinyinVisible: Boolean) {
+        controls?.show(pinyinVisible)
+    }
+
+    override fun hideControls() {
+        controls?.hide()
+    }
+
+    override fun schedule(delayMs: Long, action: () -> Unit) {
+        cancelScheduled()
+        val runnable = Runnable {
+            scheduledAction = null
+            action()
+        }
+        scheduledAction = runnable
+        mainHandler.postDelayed(runnable, delayMs)
+    }
+
+    override fun cancelScheduled() {
+        scheduledAction?.let(mainHandler::removeCallbacks)
+        scheduledAction = null
+    }
+
+    // Reading pipeline, on the worker.
+
+    /** Owns [bitmap] and must recycle it. */
+    private fun onScreenshot(bitmap: Bitmap, generation: Int) {
         val recognizer = recognizer
         val worker = worker
         if (recognizer == null || worker == null) {
             bitmap.recycle()
-            reading.set(false)
+            mainHandler.post { session.onReadingFailed(generation) }
             return
         }
         Log.i(LOG_TAG, "Screenshot ${bitmap.width}x${bitmap.height}")
         val captureId = debugStore?.newCaptureId()
 
-        // OCR runs on ML Kit's threads and its result is queued on the worker,
-        // behind the debug save below, so the bitmap is still alive for both.
+        // OCR runs on ML Kit's threads and its result is queued on the worker.
         recognizer.recognize(bitmap, worker) { page, recognitionMs ->
             try {
-                if (page != null) {
-                    val pinyin = annotate(page, recognitionMs)
-                    if (captureId != null) saveOcrDebugImage(bitmap, page, pinyin, captureId)
+                if (page == null) {
+                    mainHandler.post { session.onReadingFailed(generation) }
+                    return@recognize
+                }
+                val pinyin = annotate(page, recognitionMs)
+                val content = overlayContentOf(page, pinyin)
+                mainHandler.post { session.onReadingFinished(generation, content) }
+                // Debug images are written after the overlay is on its way.
+                if (captureId != null) {
+                    debugStore?.save(bitmap, captureId, "screenshot")
+                    saveOcrDebugImage(bitmap, page, pinyin, captureId)
                 }
             } finally {
                 bitmap.recycle()
-                reading.set(false)
             }
         }
-        if (captureId != null) debugStore?.save(bitmap, captureId, "screenshot")
     }
 
     /** Returns the pinyin of each line's characters, aligned with `page.lines`. */
@@ -160,7 +221,11 @@ class RubifyAccessibilityService : AccessibilityService() {
         if (BuildConfig.DEBUG) {
             page.lines.zip(pinyin) { line, readings ->
                 Log.d(LOG_TAG, "line ${line.box} \"${line.text}\"")
-                Log.d(LOG_TAG, "  " + line.chars.zip(readings) { c, p -> if (p != null) "${c.text}($p)" else c.text }.joinToString(""))
+                Log.d(
+                    LOG_TAG,
+                    "  " + line.chars.zip(readings) { c, p -> if (p != null) "${c.text}($p)" else c.text }
+                        .joinToString(""),
+                )
                 Log.v(LOG_TAG, "  ${line.describeChars()}")
             }
         }
@@ -185,6 +250,14 @@ class RubifyAccessibilityService : AccessibilityService() {
     // No accessibilityEventTypes are declared, so nothing is delivered here.
     override fun onAccessibilityEvent(event: AccessibilityEvent?) = Unit
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (newConfig.orientation != orientation) {
+            orientation = newConfig.orientation
+            session.onScreenMoved()
+        }
+    }
+
     override fun onInterrupt() = Unit
 
     override fun onUnbind(intent: Intent?): Boolean {
@@ -198,6 +271,12 @@ class RubifyAccessibilityService : AccessibilityService() {
     }
 
     private fun release() {
+        if (session.isActive) session.onButtonClicked()
+        mainHandler.removeCallbacksAndMessages(null)
+        overlay?.hide()
+        overlay = null
+        controls?.hide()
+        controls = null
         buttonController?.unregisterAccessibilityButtonCallback(buttonCallback)
         buttonController = null
         screenCapturer?.shutdown()

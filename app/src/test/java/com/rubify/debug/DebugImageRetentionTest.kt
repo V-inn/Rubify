@@ -9,13 +9,13 @@ class DebugImageRetentionTest {
     fun keepsAllImagesOfNewestCaptures() {
         val names = listOf(
             "20260916-120000-000-screenshot.png",
-            "20260916-120000-000-ocr.png",
-            "20260916-120002-000-screenshot.png",
+            "20260916-120000-000-ocr.jpg",
+            "20260916-120002-000-screenshot.jpg",
             "20260916-120002-000-ocr.png",
             "20260916-120001-000-screenshot.png",
         )
         assertEquals(
-            listOf("20260916-120000-000-screenshot.png", "20260916-120000-000-ocr.png"),
+            listOf("20260916-120000-000-screenshot.png", "20260916-120000-000-ocr.jpg"),
             debugImagesToPrune(names, keepCaptures = 2),
         )
     }

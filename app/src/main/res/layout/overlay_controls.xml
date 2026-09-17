@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Floating bubble shown with the pinyin: refresh after scrolling, hide or
+     show the pinyin, or close. Drag any button to move it. The toggle's icon
+     and description are set in code (ControlBubble). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_overlay_controls"
+    android:orientation="vertical"
+    android:padding="4dp">
+
+    <ImageButton
+        android:id="@+id/refresh"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/refresh_pinyin"
+        android:src="@drawable/ic_refresh" />
+
+    <ImageButton
+        android:id="@+id/toggle_pinyin"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/hide_pinyin"
+        android:src="@drawable/ic_visibility_off" />
+
+    <ImageButton
+        android:id="@+id/close"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/close_pinyin"
+        android:src="@drawable/ic_close" />
+</LinearLayout>
