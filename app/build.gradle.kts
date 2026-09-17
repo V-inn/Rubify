@@ -8,7 +8,7 @@ plugins {
 }
 
 // Release signing, read from ~/.gradle/gradle.properties, never from this
-// repository (see publishing/release-checklist.md). Without all four values the
+// repository (see readme, Releasing). Without all four values the
 // release build is produced unsigned, so anyone can still build it.
 val rubifyKeystoreFile = providers.gradleProperty("rubifyKeystoreFile").orNull
 val rubifyKeystorePassword = providers.gradleProperty("rubifyKeystorePassword").orNull
@@ -18,7 +18,7 @@ val canSignRelease = listOf(rubifyKeystoreFile, rubifyKeystorePassword, rubifyKe
     .all { it != null } && file(rubifyKeystoreFile!!).exists()
 
 // Per-ABI APKs plus a universal one, for GitHub releases
-// (-PrubifyAbiSplits=true, see publishing/github-releases.md). Off by default,
+// (-PrubifyAbiSplits=true, see readme, Releasing). Off by default,
 // so debug builds and the Play bundle, which Play splits itself, are unaffected.
 val abiSplits = providers.gradleProperty("rubifyAbiSplits").map(String::toBoolean).getOrElse(false)
 

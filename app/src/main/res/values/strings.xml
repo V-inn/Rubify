@@ -31,7 +31,8 @@
     <string name="close_pinyin">Close Rubify for now</string>
 
     <!-- Prominent disclosure (ConsentActivity). Changing its meaning requires
-         bumping Consent.DISCLOSURE_VERSION and updating publishing/. -->
+         bumping Consent.DISCLOSURE_VERSION and updating the store listing,
+         Play declarations and privacy policy. -->
     <string name="consent_title">Before you turn on Rubify</string>
     <string name="consent_intro">Rubify uses an Android accessibility service to show pinyin above Chinese text in any app. Please read how it works before you turn it on.</string>
     <string name="consent_what_heading">What Rubify does</string>

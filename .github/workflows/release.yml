@@ -1,7 +1,7 @@
 name: Release
 
 # Pushing a tag vX.Y (matching versionName) builds signed APKs and publishes
-# them as a GitHub release. See publishing/github-releases.md.
+# them as a GitHub release. See readme.md, Releasing.
 on:
   push:
     tags: ["v*"]

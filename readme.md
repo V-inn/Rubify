@@ -34,7 +34,7 @@ Early development. Done so far:
 | 5 | Overlay aligned to characters, adjusted for scale and DPI | Done, verified on device |
 | 6 | Toggle on second tap, Quick Settings tile | Done, verified on device (including full screen). The bubble's hide button replaces the planned auto-hide timeout |
 | 7 | Robustness: rotation, scroll and zoom | Done, verified on device: rotation hides the pinyin and keeps the bubble in place, and Refresh reads portrait or landscape. After scrolling or zooming, you tap Refresh |
-| 8 | Publishing prep: consent screen, store disclosure, Play declaration form | Done, verified on device. Store texts and forms are in `publishing/`. GitHub releases are automated. Play account steps are pending (`publishing/release-checklist.md`) |
+| 8 | Publishing prep: consent screen, store disclosure, Play declaration form | Done, verified on device. GitHub releases are automated. The Play listing is pending |
 
 Not in the MVP: a pipeline that pre-renders pinyin into PDFs, live OCR of handwritten S Pen ink, Cantonese, full translation, and a live camera mode.
 
@@ -153,17 +153,30 @@ app/src/main/res/xml/accessibility_service_config.xml   service capabilities
 tools/pinyin-data/                   dictionary build script
 ```
 
-## Publishing
+## Releasing
 
-Everything about distribution lives in `publishing/`:
-- `github-releases.md`: signing secrets, tagging a release, what the release contains, install steps for users
-- `release-checklist.md`: upload key, builds, Play Console forms
-- `listing.md`: Play store listing, including the accessibility disclosure
-- `accessibility-declaration.md`: Accessibility API declaration answers and demo video script
-- `data-safety.md`: Play data safety answers
-- `privacy-policy.md`: privacy policy, to host publicly
+Every push to `main` and every pull request runs `.github/workflows/ci.yml` (debug build, unit tests, lint).
 
-Automation: `.github/workflows/ci.yml` runs build, tests and lint on every push to `main` and on every pull request. `.github/workflows/release.yml` publishes signed APKs when a `vX.Y` tag is pushed.
+To publish a GitHub release, push a tag `vX.Y` that matches `versionName`. `.github/workflows/release.yml` then tests, lints and builds signed APKs, and publishes them with a `SHA256SUMS.txt`:
+- `rubify-<version>-arm64-v8a.apk` (most devices)
+- `-armeabi-v7a`
+- `-x86_64` and `-x86` (emulators, some Chromebooks)
+- `-universal`
+
+1. One-time: add the signing key as repository secrets (**Settings → Secrets and variables → Actions**):
+   ```sh
+   base64 -w0 /path/to/upload.jks | gh secret set RUBIFY_KEYSTORE_BASE64
+   gh secret set RUBIFY_KEYSTORE_PASSWORD
+   gh secret set RUBIFY_KEY_ALIAS
+   gh secret set RUBIFY_KEY_PASSWORD
+   ```
+   The workflow refuses to publish without them. Secrets never reach pull requests from forks.
+2. Bump `versionCode` (+1) and `versionName` in `app/build.gradle.kts`, and commit.
+3. Tag and push: `git tag v0.2 && git push origin v0.2`.
+
+To build the same APKs locally: `./gradlew assembleRelease -PrubifyAbiSplits=true`. They're signed when the `rubifyKeystore*` properties are set.
+
+The APKs use the same upload key as the Play bundle. Play re-signs its copies, so switching between a GitHub install and a Play install requires uninstalling first.
 
 Open-source notices are shown in the app under **Open-source licenses**.
 

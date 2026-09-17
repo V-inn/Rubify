@@ -1,5 +1,7 @@
-# Local working notes and plans. Not part of the published repository.
+# Local working notes, plans and store/publishing material. Not part of the
+# published repository.
 /docs/
+/publishing/
 
 # Gradle / Android build output
 .gradle/

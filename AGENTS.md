@@ -6,7 +6,7 @@ Rules for anyone changing this repo, human or agent. `CLAUDE.md` imports this fi
 
 Rubify is an Android app (Kotlin, plain Views, no Compose). A tap on the accessibility button takes a screenshot, runs on-device OCR for Chinese, converts the characters to pinyin, and draws the pinyin above each character in an accessibility overlay. See `readme.md` for the pipeline and phase status.
 
-The implementation plan lives in `docs/`. That folder is **gitignored and local only**: it may be missing, and it must never be committed. The existing plan there is in Portuguese. Everything new is written in English.
+The implementation plan lives in `docs/`, and store and publishing material in `publishing/`. Both folders are **gitignored and local only**: they may be missing, and they must never be committed. The existing plan there is in Portuguese. Everything new is written in English.
 
 ## License
 
@@ -66,7 +66,7 @@ Play approves the Accessibility API only for a narrow, clearly disclosed purpose
 
 ## Releases
 
-- **GitHub:** pushing a `vX.Y` tag that matches `versionName` runs `.github/workflows/release.yml`, which builds signed per-ABI APKs (`-PrubifyAbiSplits=true`) and publishes them. Signing comes from the `RUBIFY_*` repository secrets, mapped to `ORG_GRADLE_PROJECT_rubifyKeystore*` environment variables. The workflow must keep refusing to publish unsigned APKs. See `publishing/github-releases.md`.
+- **GitHub:** pushing a `vX.Y` tag that matches `versionName` runs `.github/workflows/release.yml`, which builds signed per-ABI APKs (`-PrubifyAbiSplits=true`) and publishes them. Signing comes from the `RUBIFY_*` repository secrets, mapped to `ORG_GRADLE_PROJECT_rubifyKeystore*` environment variables. The workflow must keep refusing to publish unsigned APKs. Maintainer steps are in `readme.md` → Releasing.
 - **CI** (`ci.yml`) runs `assembleDebug testDebugUnitTest lintDebug` and must stay green.
 - **Workflow changes:** keep `permissions` minimal, never print secrets, and never expose them to `pull_request` runs.
 - **ABI splits stay off by default,** so debug builds and the Play bundle are unaffected.
@@ -75,10 +75,10 @@ Play approves the Accessibility API only for a narrow, clearly disclosed purpose
 ## Consent and publishing
 
 - **Consent gates everything.** Every path that can capture the screen must check `Consent.isGiven` first: the button, the tile, and anything added later. Without consent, open `ConsentActivity`. `MainActivity` offers accessibility settings only after consent. Withdrawing consent ends the session.
-- If the disclosure strings (`consent_*`), the accessibility description, or what the service does change in meaning, bump `Consent.DISCLOSURE_VERSION` and update `publishing/` (listing disclosure, accessibility declaration, data safety, privacy policy) in the same change.
+- If the disclosure strings (`consent_*`), the accessibility description, or what the service does change in meaning, bump `Consent.DISCLOSURE_VERSION` and tell the user that the store listing disclosure, the Accessibility declaration, the data safety answers and the privacy policy need updating. Those texts live in the local `publishing/` folder when it's present.
 - The two consent buttons look the same on purpose. Don't nudge the user toward agreeing.
-- Release builds use R8 (`isMinifyEnabled`, `isShrinkResources`). Release signing comes only from `~/.gradle/gradle.properties` (`rubifyKeystore*`). Never create, commit or print keys. Verify release builds on a device, following `publishing/release-checklist.md` (Play) or `publishing/github-releases.md`.
-- `publishing/` is tracked and public, unlike `docs/`. It holds the Play Console texts and the GitHub release guide, and its placeholders (`<...>`) are for the user to fill in. Never put secrets or personal data there.
+- Release builds use R8 (`isMinifyEnabled`, `isShrinkResources`). Release signing comes only from `~/.gradle/gradle.properties` (`rubifyKeystore*`). Never create, commit or print keys. Verify release builds on a device before any release: before the upload key exists, sign `app-release-unsigned.apk` with the debug key using `apksigner`.
+- `publishing/` (store listing, Play forms, privacy policy, release checklists) is **local only and gitignored**, like `docs/`. It may be missing, and must never be committed. The privacy policy has to be hosted outside this repository.
 
 ## Privacy
 
@@ -142,6 +142,6 @@ Work follows the 8 phases in `readme.md` → Status. A phase is done only when i
 
 ## Git
 
-- Commit only when asked. Never commit `docs/`, `local.properties`, build output, keystores or credentials.
+- Commit only when asked. Never commit `docs/`, `publishing/`, `local.properties`, build output, keystores or credentials.
 - Release signing, when it's added, reads from `~/.gradle/gradle.properties`, never from the repo.
 - Keep commits small, one per phase or concern, with an imperative English subject.
