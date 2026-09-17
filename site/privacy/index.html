@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy policy · Rubify</title>
+  <meta name="description" content="How the Rubify Android app handles your information: it collects, stores and shares nothing.">
+  <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="../"><img src="../assets/icon.svg" alt="">Rubify</a>
+    <nav>
+      <a href="../">Home</a>
+      <a href="{{REPO_URL}}">Source</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Keep in step with the app's disclosure (consent_* strings). A change
+         in meaning also bumps Consent.DISCLOSURE_VERSION and "Last updated". -->
+    <h1>Privacy policy</h1>
+    <p class="meta">Last updated: 17 September 2026 · Developer: {{DEVELOPER_NAME}} · Contact: <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a></p>
+
+    <div class="summary">
+      <p>Rubify shows pinyin above Chinese text on your Android device's screen. This policy explains what the app does with your information. The short version: <strong>Rubify doesn't collect, store or share any personal data.</strong></p>
+    </div>
+
+    <h2>What Rubify accesses</h2>
+    <p>Rubify uses an Android accessibility service. When you tap the accessibility button, the Rubify Quick Settings tile, or Refresh on Rubify's floating bubble, Rubify takes a screenshot of your current screen. That screenshot can contain any information visible on your screen at that moment.</p>
+    <p>When you start Rubify from its Quick Settings tile, the service also closes the Quick Settings panel. Rubify does nothing else with the accessibility service:</p>
+    <ul>
+      <li>It doesn't read your screen on its own.</li>
+      <li>It doesn't monitor your activity.</li>
+      <li>It can't read or operate other apps' text and controls.</li>
+      <li>It doesn't change your settings.</li>
+    </ul>
+
+    <h2>How it's used</h2>
+    <p>The screenshot is processed entirely on your device. Rubify finds the Chinese characters in it, converts them to pinyin, and draws the pinyin on top of your screen. The screenshot is kept in memory only and discarded as soon as the pinyin is drawn.</p>
+
+    <h2>What is stored, collected or shared</h2>
+    <ul>
+      <li>Rubify doesn't store screenshots or recognized text.</li>
+      <li>Rubify has no internet access, so it can't send any data anywhere.</li>
+      <li>There are no accounts, ads, analytics or tracking.</li>
+      <li>On your device, Rubify saves only whether you accepted its disclosure and where you placed its bubble. You can clear both by clearing the app's data or uninstalling it.</li>
+      <li>Rubify disables backup and device-to-device transfer of its data.</li>
+    </ul>
+
+    <h2>Your choices</h2>
+    <p>Rubify asks for your consent before its accessibility service can be used. You can withdraw consent at any time from <strong>Privacy and consent</strong> in the app, and you can turn the service off in your device's accessibility settings.</p>
+
+    <h2>Children</h2>
+    <p>Rubify isn't directed at children under 13 and collects no data from anyone.</p>
+
+    <h2>This website</h2>
+    <p>This page is hosted by GitHub Pages. It uses no cookies, analytics or third-party resources. GitHub may process technical data such as your IP address to deliver it; see the <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement">GitHub General Privacy Statement</a>.</p>
+
+    <h2>Changes</h2>
+    <p>If this policy changes, the new version will be published at this address with a new date. If a change affects what the accessibility service does, Rubify will ask for your consent again.</p>
+
+    <h2>Contact</h2>
+    <p>Questions: <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a></p>
+  </main>
+
+  <footer class="site-footer">
+    <a href="../">Rubify</a> · © {{DEVELOPER_NAME}}
+  </footer>
+</body>
+</html>

@@ -67,6 +67,8 @@ Play approves the Accessibility API only for a narrow, clearly disclosed purpose
 ## Releases
 
 - **GitHub:** pushing a `vX.Y` tag that matches `versionName` runs `.github/workflows/release.yml`, which builds signed per-ABI APKs (`-PrubifyAbiSplits=true`) and publishes them. Signing comes from the `RUBIFY_*` repository secrets, mapped to `ORG_GRADLE_PROJECT_rubifyKeystore*` environment variables. The workflow must keep refusing to publish unsigned APKs. Maintainer steps are in `readme.md` → Releasing.
+- **Website** (`site/`, deployed by `pages.yml`): static HTML and CSS with system fonts. It must make no third-party requests: no CDNs, web fonts, analytics or embeds. `render.py` fills `{{REPO_URL}}`, `{{DEVELOPER_NAME}}` and `{{CONTACT_EMAIL}}` from the `RUBIFY_*` repository variables and fails on any unfilled token. Never write personal details into `site/`.
+- **Privacy policy** (`site/privacy/index.html`) must match what the app actually does. Update it together with the disclosure (`consent_*` strings, `Consent.DISCLOSURE_VERSION`), and change its "Last updated" date when its meaning changes.
 - **CI** (`ci.yml`) runs `assembleDebug testDebugUnitTest lintDebug` and must stay green.
 - **Workflow changes:** keep `permissions` minimal, never print secrets, and never expose them to `pull_request` runs.
 - **ABI splits stay off by default,** so debug builds and the Play bundle are unaffected.

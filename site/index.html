@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rubify: pinyin on your Android screen</title>
+  <meta name="description" content="Rubify shows pinyin above Chinese text in any Android app. On-device, private, open source.">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="./"><img src="assets/icon.svg" alt="">Rubify</a>
+    <nav>
+      <a href="privacy/">Privacy</a>
+      <a href="{{REPO_URL}}">Source</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Pinyin on your screen, in any app</h1>
+    <p class="lede">Tap the accessibility button, and Rubify writes the pinyin above the Chinese characters you are reading: in your browser, chats, PDFs or textbook pages.</p>
+
+    <p class="demo" lang="zh-Hans">
+      <ruby>我<rt>wǒ</rt></ruby><ruby>在<rt>zài</rt></ruby><ruby>银<rt>yín</rt></ruby><ruby>行<rt>háng</rt></ruby><ruby>工<rt>gōng</rt></ruby><ruby>作<rt>zuò</rt></ruby>
+    </p>
+
+    <ul>
+      <li><strong>Tone marks, word-aware.</strong> Characters with several readings get the one their word needs: 银行 <em>yín háng</em>, 行人 <em>xíng rén</em>.</li>
+      <li><strong>Stays out of the way.</strong> Your touches reach the app underneath; a small bubble refreshes the pinyin after you scroll, hides it or closes it.</li>
+      <li><strong>Private.</strong> Everything happens on your device. Rubify has no internet access and collects nothing.</li>
+    </ul>
+
+    <div class="actions">
+      <a class="button primary" href="{{REPO_URL}}/releases/latest">Download for Android</a>
+      <a class="button" href="{{REPO_URL}}">Source code</a>
+    </div>
+    <p class="meta">Android 11 or newer. Open source under the Apache License 2.0.</p>
+  </main>
+
+  <footer class="site-footer">
+    <a href="privacy/">Privacy policy</a> · © {{DEVELOPER_NAME}}
+  </footer>
+</body>
+</html>

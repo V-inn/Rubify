@@ -1,0 +1,49 @@
+name: Pages
+
+# Publishes site/ (landing page and privacy policy) to GitHub Pages.
+# Needs Settings -> Pages -> Source: "GitHub Actions", and the repository
+# variables RUBIFY_DEVELOPER_NAME and RUBIFY_CONTACT_EMAIL (see readme.md).
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Render the site
+        env:
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          DEVELOPER_NAME: ${{ vars.RUBIFY_DEVELOPER_NAME }}
+          CONTACT_EMAIL: ${{ vars.RUBIFY_CONTACT_EMAIL }}
+        run: python3 site/render.py _site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

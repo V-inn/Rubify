@@ -151,11 +151,12 @@ app/src/main/java/com/rubify/
 app/src/main/assets/pinyin/          generated pinyin dictionary
 app/src/main/res/xml/accessibility_service_config.xml   service capabilities
 tools/pinyin-data/                   dictionary build script
+site/                                website and privacy policy (GitHub Pages)
 ```
 
 ## Releasing
 
-Every push to `main` and every pull request runs `.github/workflows/ci.yml` (debug build, unit tests, lint).
+Every push to `main` and every pull request runs `.github/workflows/ci.yml` (debug build, unit tests, lint). The website has its own workflow (see below).
 
 To publish a GitHub release, push a tag `vX.Y` that matches `versionName`. `.github/workflows/release.yml` then tests, lints and builds signed APKs, and publishes them with a `SHA256SUMS.txt`:
 - `rubify-<version>-arm64-v8a.apk` (most devices)
@@ -177,6 +178,24 @@ To publish a GitHub release, push a tag `vX.Y` that matches `versionName`. `.git
 To build the same APKs locally: `./gradlew assembleRelease -PrubifyAbiSplits=true`. They're signed when the `rubifyKeystore*` properties are set.
 
 The APKs use the same upload key as the Play bundle. Play re-signs its copies, so switching between a GitHub install and a Play install requires uninstalling first.
+
+## Website and privacy policy
+
+`site/` holds a small static site: a landing page and the privacy policy at `/privacy/`, which is the URL to give Play. It uses plain HTML and CSS with no third-party requests. `.github/workflows/pages.yml` publishes it to GitHub Pages on every push to `main` that touches `site/`, and can also be started by hand.
+
+Personal details aren't stored in the repository. The workflow fills them in from repository variables at deploy time.
+
+One-time setup:
+1. **Settings → Pages → Build and deployment → Source:** choose **GitHub Actions**.
+2. **Settings → Secrets and variables → Actions → Variables:** add `RUBIFY_DEVELOPER_NAME` and `RUBIFY_CONTACT_EMAIL`. Both appear on the public page. The deploy fails while either is missing.
+3. Run the **Pages** workflow, from the Actions tab or by pushing a change to `site/`. The policy is then at `https://<owner>.github.io/<repository>/privacy/`.
+
+Preview locally:
+
+```sh
+REPO_URL=https://github.com/<owner>/Rubify DEVELOPER_NAME="Your Name" CONTACT_EMAIL=you@example.com \
+  python3 site/render.py /tmp/rubify-site   # then open /tmp/rubify-site/index.html
+```
 
 Open-source notices are shown in the app under **Open-source licenses**.
 

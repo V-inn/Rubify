@@ -1,0 +1,143 @@
+/* Rubify site. System fonts only: the pages make no third-party requests. */
+:root {
+  --ink: #1d1b1a;
+  --muted: #5d5753;
+  --paper: #fbf8f3;
+  --card: #ffffff;
+  --rule: #e6ded3;
+  --seal: #b71c1c;
+  --pinyin: #0d3b91;
+  --measure: 40rem;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #ece7e1;
+    --muted: #b1aaa3;
+    --paper: #16130f;
+    --card: #1f1b16;
+    --rule: #3a332b;
+    --seal: #ef6b5f;
+    --pinyin: #9db8f2;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans SC",
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  padding-inline: 20px;
+}
+
+main,
+.site-header,
+.site-footer {
+  max-width: var(--measure);
+  margin-inline: auto;
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 1.25rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-decoration: none;
+}
+
+.brand img { width: 32px; height: 32px; border-radius: 8px; }
+
+nav a { color: var(--muted); text-decoration: none; margin-left: 1rem; }
+nav a:hover, nav a:focus-visible { color: var(--ink); text-decoration: underline; }
+
+main { padding-block: 2.5rem 3rem; }
+
+h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 0.5rem; letter-spacing: -0.01em; }
+h2 { font-size: 1.15rem; margin: 2.25rem 0 0.5rem; }
+p, ul { margin: 0 0 1rem; }
+ul { padding-left: 1.25rem; }
+li { margin-bottom: 0.35rem; }
+a { color: var(--pinyin); }
+strong { font-weight: 650; }
+
+.lede { font-size: 1.15rem; color: var(--muted); }
+.meta { color: var(--muted); font-size: 0.9rem; }
+
+/* The hero shows what the app does: pinyin set above the characters. */
+.demo {
+  margin: 2rem 0 2.25rem;
+  padding: 1.75rem 1.5rem 1.25rem;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  font-size: clamp(2rem, 9vw, 3.4rem);
+  line-height: 1.9;
+  letter-spacing: 0.08em;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.demo ruby { ruby-position: over; }
+
+.demo rt {
+  font-size: 0.34em;
+  letter-spacing: 0;
+  color: var(--pinyin);
+  font-weight: 600;
+}
+
+.actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1.5rem 0 0.5rem; }
+
+.button {
+  display: inline-block;
+  padding: 0.65rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  background: var(--card);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.button.primary { background: var(--seal); border-color: var(--seal); color: #fff; }
+.button:hover, .button:focus-visible { filter: brightness(1.06); text-decoration: underline; }
+
+.summary {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--seal);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.summary p:last-child { margin-bottom: 0; }
+
+.site-footer {
+  padding-block: 1.25rem 2rem;
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
