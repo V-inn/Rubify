@@ -74,7 +74,7 @@ class MainActivity : Activity() {
                 else -> R.string.status_disabled
             },
         )
-        val hint = if (consent && !enabled && installedFromDownload()) View.VISIBLE else View.GONE
+        val hint = if (consent && !enabled && installedOutsideAStore()) View.VISIBLE else View.GONE
         restrictedSettingsHint.visibility = hint
         openAppInfo.visibility = hint
         if (consent) {
@@ -103,19 +103,19 @@ class MainActivity : Activity() {
     }
 
     /**
-     * APKs installed from a browser or file manager get "restricted
-     * settings" on Android 13+: their accessibility service stays greyed out
-     * until the user allows it in App info. Store and adb installs don't.
+     * Apps that didn't come from an app store can get "restricted settings"
+     * on Android 13+: their accessibility service stays greyed out until the
+     * user allows it in App info. On the Android 16 test tablet this also hit
+     * a release build installed with adb (packageSource OTHER).
      */
-    private fun installedFromDownload(): Boolean {
+    private fun installedOutsideAStore(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
         val source = try {
             packageManager.getInstallSourceInfo(packageName).packageSource
         } catch (e: PackageManager.NameNotFoundException) {
             return false
         }
-        return source == PackageInstaller.PACKAGE_SOURCE_DOWNLOADED_FILE ||
-            source == PackageInstaller.PACKAGE_SOURCE_LOCAL_FILE
+        return source != PackageInstaller.PACKAGE_SOURCE_STORE
     }
 
     private fun isServiceEnabled(): Boolean {

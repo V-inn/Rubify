@@ -51,9 +51,9 @@ After installing, open Rubify, agree to the disclosure, and turn Rubify on in ac
 > adb install rubify-<version>-arm64-v8a.apk
 > ```
 >
-> Apps installed this way aren't blocked, and they don't need "Allow restricted settings". Installer apps such as [Obtainium](https://github.com/ImranR98/Obtainium) may be blocked in the same way.
+> Play Protect doesn't block this way of installing. Android may still grey out the accessibility toggle, though (see below). Installer apps such as [Obtainium](https://github.com/ImranR98/Obtainium) may be blocked in the same way.
 
-> **Greyed out?** Android 13 and newer block accessibility for apps installed from a download. Open **Settings → Apps → Rubify → ⋮ → Allow restricted settings**, then turn Rubify on. The app's main screen has an **Open app info** shortcut for this.
+> **Greyed out?** Android 13 and newer block accessibility for apps installed outside an app store, including with `adb install`. Open **Settings → Apps → Rubify → ⋮ → Allow restricted settings**, then turn Rubify on. The app's main screen has an **Open app info** shortcut for this.
 
 ## Requirements
 

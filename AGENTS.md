@@ -130,7 +130,9 @@ Test device: Galaxy Tab S9 FE (SM-X610), Android 16 (API 36), One UI, 1600x2560 
 - Tile: `requestAddTileService` returned 2 (added), then 1 (already added). Captures 800 ms and 400 ms after a tile tap were both clean (panel fully closed). `TILE_SETTLE_MS` is 400 ms.
 - Rotation: `onConfigurationChanged` fires on the service. A landscape capture comes back as 2560x1600 and reads fine (OCR about 350 ms).
 - The bubble's placement is stored as fractions of the free space (`BubblePlacement`) in the `control_bubble` preferences, and applied again on rotation.
-- The arm64 split APK (about 16 MB, from `-PrubifyAbiSplits=true`) installs and runs. `adb install` reports `packageSource=1` (OTHER), so the restricted-settings hint in `MainActivity` shows only for `LOCAL_FILE` and `DOWNLOADED_FILE` installs.
+- The arm64 split APK (about 16 MB, from `-PrubifyAbiSplits=true`) installs and runs. `adb install` reports `packageSource=1` (OTHER).
+- Installing from GitHub (v0.1 downloaded in Chrome) is blocked by Play Protect's enhanced fraud protection ("O app foi bloqueado para proteger seu dispositivo"), with no way to continue. Installing the same APK with `adb install` works.
+- Restricted settings: the non-debuggable v0.1 release installed with `adb install` still had its accessibility toggle greyed out until "Allow restricted settings" (appop `ACCESS_RESTRICTED_SETTINGS`). The debuggable debug builds never were. So the `MainActivity` hint shows for every non-store install (`packageSource != STORE`).
 - Release build (R8) runs on device. The dictionary loads in about 320 ms, against 1.4 s in debug. The release APK is 45.9 MB with all ABIs, and the AAB is 21.6 MB.
 - Toasts are suppressed while the app's notifications are off ("Suppressing toast from package com.rubify by user request"), and the user doesn't want status messages anyway. Don't add toasts or notifications for reading results.
 - Labels: text size is 0.4 of the line's median character height (9–28 sp), shrunk per line so neighbouring syllables don't collide.
