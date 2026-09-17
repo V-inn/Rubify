@@ -128,6 +128,23 @@ strong { font-weight: 650; }
 .button.primary { background: var(--seal); border-color: var(--seal); color: #fff; }
 .button:hover, .button:focus-visible { filter: brightness(1.06); text-decoration: underline; }
 
+.note {
+  margin: 1.25rem 0 0;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--seal);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.note strong { color: var(--ink); }
+
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.9em;
+}
+
 .summary {
   background: var(--card);
   border: 1px solid var(--rule);

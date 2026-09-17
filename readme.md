@@ -40,10 +40,18 @@ Not in the MVP: a pipeline that pre-renders pinyin into PDFs, live OCR of handwr
 
 ## Install
 
-- **GitHub Releases:** download `rubify-<version>-arm64-v8a.apk` from this repository's latest release, or the `universal` APK if unsure. [Obtainium](https://github.com/ImranR98/Obtainium) can keep it updated from the releases.
+- **GitHub Releases:** download `rubify-<version>-arm64-v8a.apk` from this repository's latest release, or the `universal` APK if unsure. See the Play Protect note below.
 - **Google Play:** planned.
 
 After installing, open Rubify, agree to the disclosure, and turn Rubify on in accessibility settings.
+
+> **Blocked by Play Protect?** In some countries, including Brazil, Google Play Protect blocks installing apps that use an accessibility service when they come from a browser, file manager or chat app. The message is "App blocked to protect your device", and there's no option to continue. Until Rubify is on Google Play, install it from a computer with USB debugging turned on:
+>
+> ```sh
+> adb install rubify-<version>-arm64-v8a.apk
+> ```
+>
+> Apps installed this way aren't blocked, and they don't need "Allow restricted settings". Installer apps such as [Obtainium](https://github.com/ImranR98/Obtainium) may be blocked in the same way.
 
 > **Greyed out?** Android 13 and newer block accessibility for apps installed from a download. Open **Settings → Apps → Rubify → ⋮ → Allow restricted settings**, then turn Rubify on. The app's main screen has an **Open app info** shortcut for this.
 
