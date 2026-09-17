@@ -19,7 +19,7 @@ accessibility button tap
   - **Eye** hides the pinyin or brings the same pinyin back, without reading again.
   - **✕ Close** ends the session. Tapping the accessibility button again does the same.
 - Rotating the screen hides the pinyin, because it no longer lines up. Use Refresh to bring it back.
-- Planned: a Quick Settings tile as a fallback trigger for full-screen apps, which hide the navigation bar and the accessibility button with it.
+- The **Rubify Quick Settings tile** does the same as the accessibility button. It's for full-screen apps, which hide the navigation bar and the accessibility button with it. Tapping the tile closes the Quick Settings panel and then reads the screen. The tile shows "Pinyin on" while a session is active. On Android 13+, the app's main screen can add the tile for you.
 
 ## Status
 
@@ -32,7 +32,7 @@ Early development. Done so far:
 | 3 | OCR with ML Kit (Chinese), per-character bounding boxes | Done, verified on device |
 | 4 | Pinyin with correct tones, with word segmentation | Done, verified on device |
 | 5 | Overlay aligned to characters, adjusted for scale and DPI | Done, verified on device |
-| 6 | Toggle on second tap, Quick Settings tile | Partly done: a second tap ends the session and the bubble can hide or close the pinyin. Still to do: the tile, and hiding on a timeout |
+| 6 | Toggle on second tap, Quick Settings tile | Done, verified on device (including full screen). The bubble's hide button replaces the planned auto-hide timeout |
 | 7 | Robustness: rotation, scroll and zoom | Partly done: rotation hides the pinyin, and after scrolling you tap Refresh (see below) |
 | 8 | Publishing prep: consent screen, store disclosure, Play declaration form | Planned |
 
@@ -57,15 +57,16 @@ Create `local.properties` with `sdk.dir=/path/to/Android/Sdk` if `ANDROID_HOME` 
 
 1. Install the debug build and open **Rubify**.
 2. Tap **Open accessibility settings**, enable **Rubify**, and allow it.
-3. If the system asks, assign the accessibility button (or gesture) to Rubify. If another service also uses the button, each tap opens a menu: pick Rubify. The capture waits 400 ms so the menu is gone by then.
-4. Watch the log, then tap the accessibility button:
+3. Optional: tap **Add Quick Settings tile** (Android 13+), or add the Rubify tile yourself by editing Quick Settings.
+4. If the system asks, assign the accessibility button (or gesture) to Rubify. If another service also uses the button, each tap opens a menu: pick Rubify. The capture waits 400 ms so the menu is gone by then.
+5. Watch the log, then tap the accessibility button or the tile:
 
    ```sh
    adb logcat -s Rubify
    ```
 
    Pinyin appears above the characters, with the control bubble at the right edge. Each reading logs `Accessibility button clicked` (for button taps), `Screenshot <width>x<height>`, `OCR in <ms> ms: <lines> lines, <n> hanzi`, `Pinyin in <ms> ms`, and `Overlay shown with <n> labels`. Debug builds also log every recognized line with its pinyin, like `你(nǐ)好(hǎo)` (`-s Rubify:D`), and each character with its box and confidence (`-s Rubify:V`). 
-5. Pull the debug images and compare them with the screen:
+6. Pull the debug images and compare them with the screen:
 
    ```sh
    adb shell run-as com.rubify ls files/debug-images
@@ -100,7 +101,7 @@ Sources, all MIT licensed (notices ship in `assets/pinyin/LICENSES.txt`): [mozil
 
 ## Privacy
 
-- Rubify reads the screen only when you tap: the accessibility button, or Refresh (or Show, after a rotation) on its bubble. It subscribes to no accessibility events and cannot read window content.
+- Rubify reads the screen only when you tap: the accessibility button, the Quick Settings tile, or Refresh (or Show, after a rotation) on its bubble. Starting from the tile also closes the Quick Settings panel, using the accessibility "dismiss notification shade" action (Back on Android 11). It subscribes to no accessibility events and cannot read window content.
 - The pinyin and the bubble live in accessibility overlay windows. The pinyin window ignores touches, so everything you do goes to the app underneath. Only the bubble itself takes touches.
 - Everything runs on the device, with the OCR model bundled in the app. The app does not request the `INTERNET` permission. ML Kit's library asks for it (to send usage stats), so the manifest removes it, and the build fails if any network permission shows up.
 - Screenshots stay in memory and are discarded after processing (debug builds are the only exception, see above). Backup and device transfer are disabled.
@@ -122,6 +123,7 @@ app/src/main/java/com/rubify/
   overlay/PinyinLayout.kt              label placement and sizing (pure Kotlin)
   overlay/PinyinOverlay.kt             full-screen, touch-through pinyin window
   overlay/ControlBubble.kt             draggable refresh / hide / close bubble
+  tile/ReadingTileService.kt           Quick Settings tile
   debug/DebugImageStore.kt             debug-only JPEG dumps
   debug/OcrDebugRenderer.kt            draws OCR boxes for inspection
 app/src/main/assets/pinyin/          generated pinyin dictionary

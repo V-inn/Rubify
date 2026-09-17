@@ -48,7 +48,9 @@ AGP **8.11.1**, Kotlin **2.2.20**, Gradle **8.13**, compile/target SDK **36**, J
 
 Play approves the Accessibility API only for a narrow, clearly disclosed purpose, so the service must stay minimal.
 
-- **Act only on explicit user triggers**: the accessibility button, the control bubble, and from phase 6 the Quick Settings tile. Nothing runs in the background.
+- **Act only on explicit user triggers**: the accessibility button, the Quick Settings tile, and the control bubble. Nothing runs in the background.
+- The only global action allowed is closing Quick Settings after a tile tap (`GLOBAL_ACTION_DISMISS_NOTIFICATION_SHADE`, or `GLOBAL_ACTION_BACK` on API 30). Add no other global actions or gestures without asking.
+- Don't set `android:tileService` in the accessibility config. It would make the tile turn the service on and off instead of starting a reading.
 - **Never capture the screen on a timer or on events.** Refresh after scrolling is a bubble tap by design. Automatic refresh was tried on 2026-09-16 and dropped:
   - Samsung Notes sends no `TYPE_VIEW_SCROLLED`, only noisy `TYPE_WINDOW_CONTENT_CHANGED`.
   - The alternatives (content-change events, periodic screenshot diffs) weaken the Play position.
@@ -77,7 +79,7 @@ com.rubify
   debug/     debug-only image dumps (JPEG) and OCR box rendering
   pinyin/    dictionary, max-probability segmentation, annotator
   overlay/   pure label layout; touch-through pinyin window; control bubble
-  tile/      TileService fallback trigger                       (phase 6)
+  tile/      Quick Settings tile (second trigger)
 ```
 
 - Keep the service thin. Logic goes in its own package.
@@ -85,6 +87,7 @@ com.rubify
 - No heavy work on the main thread. Pipeline callbacks run on the `rubify-worker` HandlerThread, one at a time, and ML Kit runs on its own threads. `ReadingSession` decides on the main thread. Each reading carries a generation number, and results from before a refresh, a rotation or the end of the session are dropped.
 - The pinyin dictionary loads on the worker as the first queued task after connect, so readings queued later always see it. `annotator` is confined to the worker.
 - Bitmap ownership is explicit. Don't recycle a bitmap before every async consumer's callback has run. Queue those callbacks on the worker so they run after any synchronous work that still uses the bitmap.
+- The tile reaches the service through `RubifyAccessibilityService.running()`, an in-process `WeakReference` that is only used on the main thread. The service calls `TileService.requestListeningState` when a session starts or ends, and the tile reads the state in `onStartListening`.
 - Log through `LOG_TAG`. Never log recognized text in release builds.
 
 ## Device findings
@@ -100,6 +103,7 @@ Test device: Galaxy Tab S9 FE (SM-X610), Android 16 (API 36), One UI, 1600x2560 
 - The accessibility-button chooser makes fast repeated taps impossible, so the tap-dropped path hasn't been seen on a device yet.
 - The pinyin dictionary (about 155k words) loads in about 1.7 s at service start. Annotating a full page takes about 10 ms.
 - Overlay: the full-screen `TYPE_ACCESSIBILITY_OVERLAY` window sits at (0, 0) at 1600x2560, so the screenshot-to-overlay mapping is 1:1. Its own `rootWindowInsets` are all zero, so status bar insets come from `WindowManager.currentWindowMetrics` (top 64 px here). `maximumWindowMetrics` works from the service.
+- Tile: `requestAddTileService` returned 2 (added), then 1 (already added). From the tile, a capture 800 ms after the tap was clean (panel fully closed, full-screen Notes). `TILE_SETTLE_MS` is now 400 ms at the user's request.
 - Labels: text size is 0.4 of the line's median character height (9–28 sp), shrunk per line so neighbouring syllables don't collide.
 - Accessibility events (tried, then removed):
   - Subscribing to event types at runtime makes the foreground app send a `TYPE_WINDOW_STATE_CHANGED` for itself right away.

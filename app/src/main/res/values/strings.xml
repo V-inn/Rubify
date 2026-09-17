@@ -4,13 +4,20 @@
 
     <string name="accessibility_service_label">Rubify</string>
     <string name="accessibility_service_summary">Shows pinyin above Chinese text when you tap the accessibility button.</string>
-    <string name="accessibility_service_description">When you tap the accessibility button, Rubify takes a screenshot, recognizes the Chinese characters in it and shows their pinyin above them, with a small bubble to refresh, hide or close the pinyin. Rubify acts only when you tap. It does not read screen content at any other time, and screenshots are processed on this device and never uploaded.</string>
+    <string name="accessibility_service_description">When you tap the accessibility button or the Rubify Quick Settings tile, Rubify takes a screenshot, recognizes the Chinese characters in it and shows their pinyin above them, with a small bubble to refresh, hide or close the pinyin. When started from the tile, Rubify first closes the Quick Settings panel. Rubify acts only when you tap. It does not read screen content at any other time, and screenshots are processed on this device and never uploaded.</string>
 
     <string name="main_title">Rubify</string>
     <string name="main_body">Rubify shows pinyin above Chinese characters on your screen. Enable the Rubify accessibility service, then tap the accessibility button whenever you want pinyin for what is on screen.</string>
     <string name="status_enabled">Service is enabled.</string>
     <string name="status_disabled">Service is disabled.</string>
     <string name="open_accessibility_settings">Open accessibility settings</string>
+    <string name="main_tile_hint">In full-screen apps the accessibility button is hidden. Use the Rubify tile in Quick Settings instead.</string>
+    <string name="add_tile">Add Quick Settings tile</string>
+
+    <string name="tile_label">Rubify</string>
+    <string name="tile_subtitle_off">Show pinyin</string>
+    <string name="tile_subtitle_on">Pinyin on</string>
+    <string name="tile_subtitle_set_up">Set up</string>
 
     <string name="refresh_pinyin">Refresh pinyin</string>
     <string name="hide_pinyin">Hide pinyin</string>

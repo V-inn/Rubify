@@ -53,6 +53,10 @@ dependencies {
     // play-services-mlkit-* variant would download it through Play services.
     implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
 
+    // @RequiresApi and friends; ML Kit brings an older copy, the app uses
+    // it directly, so it is declared here.
+    implementation("androidx.annotation:annotation:1.10.0")
+
     testImplementation("junit:junit:4.13.2")
 }
 

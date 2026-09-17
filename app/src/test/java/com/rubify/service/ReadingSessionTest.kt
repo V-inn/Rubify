@@ -18,6 +18,7 @@ class ReadingSessionTest {
         var controls = false
         var toggleShowsPinyinVisible: Boolean? = null
         var scheduled: Pair<Long, () -> Unit>? = null
+        val sessionChanges = mutableListOf<Boolean>()
 
         override fun startReading(generation: Int, settleDelayMs: Long) {
             readings += generation to settleDelayMs
@@ -29,6 +30,7 @@ class ReadingSessionTest {
             toggleShowsPinyinVisible = pinyinVisible
         }
         override fun hideControls() { controls = false }
+        override fun sessionChanged(active: Boolean) { sessionChanges += active }
         override fun schedule(delayMs: Long, action: () -> Unit) { scheduled = delayMs to action }
         override fun cancelScheduled() { scheduled = null }
 
@@ -73,6 +75,25 @@ class ReadingSessionTest {
         assertNull(host.pinyin)
         assertFalse(host.controls)
         assertEquals(1, host.readings.size)
+    }
+
+    @Test
+    fun tileStartsWithALongerWaitAndEndsLikeTheButton() {
+        session.onTileClicked()
+        assertEquals(ReadingSession.TILE_SETTLE_MS, host.readings.single().second)
+        session.onReadingFinished(host.lastGeneration, page)
+        session.onTileClicked()
+        assertFalse(session.isActive)
+        assertNull(host.pinyin)
+    }
+
+    @Test
+    fun reportsSessionStartAndEnd() {
+        startAndShow()
+        session.onCloseRequested()
+        session.onButtonClicked()
+        session.onReadingFinished(host.lastGeneration, empty)
+        assertEquals(listOf(true, false, true, false), host.sessionChanges)
     }
 
     @Test

@@ -2,13 +2,16 @@ package com.rubify.service
 
 import android.accessibilityservice.AccessibilityButtonController
 import android.accessibilityservice.AccessibilityService
+import android.content.ComponentName
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.os.SystemClock
+import android.service.quicksettings.TileService
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import com.rubify.BuildConfig
@@ -25,11 +28,13 @@ import com.rubify.overlay.PinyinOverlay
 import com.rubify.overlay.overlayContentOf
 import com.rubify.pinyin.PinyinAnnotator
 import com.rubify.pinyin.PinyinAssets
+import com.rubify.tile.ReadingTileService
+import java.lang.ref.WeakReference
 import java.util.concurrent.Executor
 
 /**
- * Reads the screen when the user asks: the accessibility button, or the
- * control bubble (see [ReadingSession]). It subscribes to no
+ * Reads the screen when the user asks: the accessibility button, the Quick
+ * Settings tile, or the control bubble (see [ReadingSession]). It subscribes to no
  * accessibility events and cannot read window content (see
  * res/xml/accessibility_service_config.xml).
  *
@@ -61,6 +66,9 @@ class RubifyAccessibilityService : AccessibilityService(), ReadingSession.Host {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var scheduledAction: Runnable? = null
     private var orientation = Configuration.ORIENTATION_UNDEFINED
+
+    /** Main thread. For the tile. */
+    val isSessionActive: Boolean get() = session.isActive
 
     /**
      * Last known button availability. The button disappears in full-screen
@@ -111,7 +119,34 @@ class RubifyAccessibilityService : AccessibilityService(), ReadingSession.Host {
         controller.registerAccessibilityButtonCallback(buttonCallback)
         buttonController = controller
         isButtonAvailable = controller.isAccessibilityButtonAvailable
+        running = WeakReference(this)
         Log.i(LOG_TAG, "Service connected, accessibility button available=$isButtonAvailable")
+        requestTileUpdate()
+    }
+
+    /** Main thread. Called by [ReadingTileService]. */
+    fun onTileClicked() {
+        Log.i(LOG_TAG, "Tile clicked")
+        if (!session.isActive) closeQuickSettings()
+        session.onTileClicked()
+    }
+
+    private fun closeQuickSettings() {
+        val action = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            GLOBAL_ACTION_DISMISS_NOTIFICATION_SHADE
+        } else {
+            // Android 11 has no dismiss action; Back closes the open panel.
+            GLOBAL_ACTION_BACK
+        }
+        if (!performGlobalAction(action)) Log.w(LOG_TAG, "Could not close Quick Settings")
+    }
+
+    private fun requestTileUpdate() {
+        try {
+            TileService.requestListeningState(this, ComponentName(this, ReadingTileService::class.java))
+        } catch (e: RuntimeException) {
+            Log.w(LOG_TAG, "Tile update request failed", e)
+        }
     }
 
     private fun loadPinyinDictionary() {
@@ -156,6 +191,10 @@ class RubifyAccessibilityService : AccessibilityService(), ReadingSession.Host {
 
     override fun hideControls() {
         controls?.hide()
+    }
+
+    override fun sessionChanged(active: Boolean) {
+        requestTileUpdate()
     }
 
     override fun schedule(delayMs: Long, action: () -> Unit) {
@@ -271,6 +310,7 @@ class RubifyAccessibilityService : AccessibilityService(), ReadingSession.Host {
     }
 
     private fun release() {
+        if (running?.get() === this) running = null
         if (session.isActive) session.onButtonClicked()
         mainHandler.removeCallbacksAndMessages(null)
         overlay?.hide()
@@ -289,5 +329,12 @@ class RubifyAccessibilityService : AccessibilityService(), ReadingSession.Host {
         worker = null
         debugStore = null
         annotator = null
+    }
+
+    companion object {
+        /** The connected service in this process. Main thread only. */
+        private var running: WeakReference<RubifyAccessibilityService>? = null
+
+        fun running(): RubifyAccessibilityService? = running?.get()
     }
 }
