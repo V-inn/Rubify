@@ -7,6 +7,16 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+// Release signing, read from ~/.gradle/gradle.properties, never from this
+// repository (see play/release-checklist.md). Without all four values the
+// release build is produced unsigned, so anyone can still build it.
+val rubifyKeystoreFile = providers.gradleProperty("rubifyKeystoreFile").orNull
+val rubifyKeystorePassword = providers.gradleProperty("rubifyKeystorePassword").orNull
+val rubifyKeyAlias = providers.gradleProperty("rubifyKeyAlias").orNull
+val rubifyKeyPassword = providers.gradleProperty("rubifyKeyPassword").orNull
+val canSignRelease = listOf(rubifyKeystoreFile, rubifyKeystorePassword, rubifyKeyAlias, rubifyKeyPassword)
+    .all { it != null } && file(rubifyKeystoreFile!!).exists()
+
 android {
     namespace = "com.rubify"
     compileSdk = 36
@@ -17,15 +27,31 @@ android {
         // AccessibilityService.takeScreenshot() is API 30. This is the floor.
         minSdk = 30
         targetSdk = 36
+        // versionCode is Play's ordering key: +1 for every uploaded build,
+        // never reused. versionName is for people.
         versionCode = 1
         versionName = "0.1"
     }
 
+    signingConfigs {
+        if (canSignRelease) {
+            create("release") {
+                storeFile = file(rubifyKeystoreFile!!)
+                storePassword = rubifyKeystorePassword
+                keyAlias = rubifyKeyAlias
+                keyPassword = rubifyKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // Enabled once a release build is verified on a device with ML Kit's
-            // consumer keep rules.
-            isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("release")
+            // ML Kit ships its own keep rules and the app uses no reflection;
+            // assets (the pinyin dictionary) are not touched by shrinking.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
         }
     }
 

@@ -60,6 +60,14 @@ Play approves the Accessibility API only for a narrow, clearly disclosed purpose
 - A new capability or flag in `res/xml/accessibility_service_config.xml` needs matching updates to the service description string, `readme.md` → Privacy, and the phase 8 disclosure. Ask the user before adding one.
 - Don't switch to `MediaProjection` unless the user decides to.
 
+## Consent and publishing
+
+- **Consent gates everything.** Every path that can capture the screen must check `Consent.isGiven` first: the button, the tile, and anything added later. Without consent, open `ConsentActivity`. `MainActivity` offers accessibility settings only after consent. Withdrawing consent ends the session.
+- If the disclosure strings (`consent_*`), the accessibility description, or what the service does change in meaning, bump `Consent.DISCLOSURE_VERSION` and update `play/` (listing disclosure, accessibility declaration, data safety, privacy policy) in the same change.
+- The two consent buttons look the same on purpose. Don't nudge the user toward agreeing.
+- Release builds use R8 (`isMinifyEnabled`, `isShrinkResources`). Release signing comes only from `~/.gradle/gradle.properties` (`rubifyKeystore*`). Never create, commit or print keys. Verify release builds on a device, following `play/release-checklist.md`.
+- `play/` is tracked, unlike `docs/`. It holds the Play Console texts, and its placeholders (`<...>`) are for the user to fill in.
+
 ## Privacy
 
 - **On-device only.** Never add the `INTERNET` permission, analytics, crash reporting, or any network client without explicit approval. The user prefers no network but accepts it if something truly requires it. Ask first.
@@ -80,6 +88,7 @@ com.rubify
   pinyin/    dictionary, max-probability segmentation, annotator
   overlay/   pure label layout and bubble placement; touch-through pinyin window; control bubble
   tile/      Quick Settings tile (second trigger)
+  consent/   versioned consent flag + disclosure screen
 ```
 
 - Keep the service thin. Logic goes in its own package.
@@ -106,6 +115,7 @@ Test device: Galaxy Tab S9 FE (SM-X610), Android 16 (API 36), One UI, 1600x2560 
 - Tile: `requestAddTileService` returned 2 (added), then 1 (already added). Captures 800 ms and 400 ms after a tile tap were both clean (panel fully closed). `TILE_SETTLE_MS` is 400 ms.
 - Rotation: `onConfigurationChanged` fires on the service. A landscape capture comes back as 2560x1600 and reads fine (OCR about 350 ms).
 - The bubble's placement is stored as fractions of the free space (`BubblePlacement`) in the `control_bubble` preferences, and applied again on rotation.
+- Release build (R8) runs on device. The dictionary loads in about 320 ms, against 1.4 s in debug. The release APK is 45.9 MB with all ABIs, and the AAB is 21.6 MB.
 - Toasts are suppressed while the app's notifications are off ("Suppressing toast from package com.rubify by user request"), and the user doesn't want status messages anyway. Don't add toasts or notifications for reading results.
 - Labels: text size is 0.4 of the line's median character height (9–28 sp), shrunk per line so neighbouring syllables don't collide.
 - Accessibility events (tried, then removed):

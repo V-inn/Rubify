@@ -8,13 +8,16 @@ import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import com.rubify.MainActivity
 import com.rubify.R
+import com.rubify.consent.Consent
+import com.rubify.consent.ConsentActivity
 import com.rubify.service.RubifyAccessibilityService
 
 /**
  * Quick Settings tile: the second trigger, for when the accessibility button
  * is missing (full-screen apps hide the navigation bar). A tap starts or
  * ends a session in the accessibility service, which runs in this process.
- * Without the service enabled, the tile opens Rubify instead.
+ * Without consent the tile opens the disclosure, and without the service
+ * enabled it opens Rubify.
  */
 class ReadingTileService : TileService() {
 
@@ -26,8 +29,12 @@ class ReadingTileService : TileService() {
     override fun onClick() {
         super.onClick()
         val service = RubifyAccessibilityService.running()
+        if (!Consent.isGiven(this)) {
+            openActivity(ConsentActivity::class.java)
+            return
+        }
         if (service == null) {
-            openApp()
+            openActivity(MainActivity::class.java)
             return
         }
         service.onTileClicked()
@@ -41,7 +48,7 @@ class ReadingTileService : TileService() {
         tile.state = if (active) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
         tile.subtitle = getString(
             when {
-                service == null -> R.string.tile_subtitle_set_up
+                service == null || !Consent.isGiven(this) -> R.string.tile_subtitle_set_up
                 active -> R.string.tile_subtitle_on
                 else -> R.string.tile_subtitle_off
             },
@@ -49,11 +56,11 @@ class ReadingTileService : TileService() {
         tile.updateTile()
     }
 
-    private fun openApp() {
-        val intent = Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    private fun openActivity(activity: Class<*>) {
+        val intent = Intent(this, activity).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startActivityAndCollapse(
-                PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE),
+                PendingIntent.getActivity(this, activity.name.hashCode(), intent, PendingIntent.FLAG_IMMUTABLE),
             )
         } else {
             openAppBeforeApi34(intent)

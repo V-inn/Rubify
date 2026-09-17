@@ -17,6 +17,8 @@ import android.view.accessibility.AccessibilityEvent
 import com.rubify.BuildConfig
 import com.rubify.LOG_TAG
 import com.rubify.capture.ScreenCapturer
+import com.rubify.consent.Consent
+import com.rubify.consent.ConsentActivity
 import com.rubify.debug.DebugImageStore
 import com.rubify.debug.OcrDebugRenderer
 import com.rubify.ocr.HanziRecognizer
@@ -34,7 +36,9 @@ import java.util.concurrent.Executor
 
 /**
  * Reads the screen when the user asks: the accessibility button, the Quick
- * Settings tile, or the control bubble (see [ReadingSession]). It subscribes to no
+ * Settings tile, or the control bubble (see [ReadingSession]). Nothing is
+ * read until the user has accepted the disclosure ([Consent]); until then a
+ * tap opens it. It subscribes to no
  * accessibility events and cannot read window content (see
  * res/xml/accessibility_service_config.xml).
  *
@@ -82,7 +86,11 @@ class RubifyAccessibilityService : AccessibilityService(), ReadingSession.Host {
     private val buttonCallback = object : AccessibilityButtonController.AccessibilityButtonCallback() {
         override fun onClicked(controller: AccessibilityButtonController) {
             Log.i(LOG_TAG, "Accessibility button clicked")
-            session.onButtonClicked()
+            if (Consent.isGiven(this@RubifyAccessibilityService)) {
+                session.onButtonClicked()
+            } else {
+                openDisclosure()
+            }
         }
 
         override fun onAvailabilityChanged(
@@ -127,8 +135,26 @@ class RubifyAccessibilityService : AccessibilityService(), ReadingSession.Host {
     /** Main thread. Called by [ReadingTileService]. */
     fun onTileClicked() {
         Log.i(LOG_TAG, "Tile clicked")
+        if (!Consent.isGiven(this)) {
+            // The tile checks first; this is the backstop.
+            closeQuickSettings()
+            openDisclosure()
+            return
+        }
         if (!session.isActive) closeQuickSettings()
         session.onTileClicked()
+    }
+
+    /** Main thread. Called by [ConsentActivity]. */
+    fun onConsentWithdrawn() {
+        if (session.isActive) session.onCloseRequested()
+    }
+
+    private fun openDisclosure() {
+        Log.i(LOG_TAG, "No consent yet, opening the disclosure")
+        startActivity(
+            Intent(this, ConsentActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
     }
 
     private fun closeQuickSettings() {

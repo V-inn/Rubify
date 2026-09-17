@@ -34,6 +34,15 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".consent.ConsentActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".LicensesActivity"
+            android:exported="false"
+            android:label="@string/open_source_licenses" />
+
         <service
             android:name=".service.RubifyAccessibilityService"
             android:exported="true"

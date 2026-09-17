@@ -15,32 +15,64 @@ import android.view.accessibility.AccessibilityManager
 import android.widget.Button
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import com.rubify.consent.Consent
+import com.rubify.consent.ConsentActivity
 import com.rubify.service.RubifyAccessibilityService
 import com.rubify.tile.ReadingTileService
 
 /**
- * Entry point and the service's settings screen. Shows whether the
- * accessibility service is enabled, links to the system settings, and on
- * Android 13+ offers to add the Quick Settings tile.
- * The first-run consent screen replaces this in phase 8.
+ * Entry point and the service's settings screen: service state, the way to
+ * turn it on (only after the disclosure is accepted), the tile, privacy and
+ * licenses. The disclosure opens by itself on first launch.
  */
 class MainActivity : Activity() {
 
     private lateinit var statusView: TextView
+    private lateinit var primaryAction: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         statusView = findViewById(R.id.service_status)
-        findViewById<Button>(R.id.open_accessibility_settings).setOnClickListener {
-            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-        }
+        primaryAction = findViewById(R.id.primary_action)
+
         val addTile = findViewById<Button>(R.id.add_tile)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             addTile.setOnClickListener { requestAddTile() }
         } else {
             addTile.visibility = View.GONE
         }
+        findViewById<Button>(R.id.privacy_and_consent).setOnClickListener { openDisclosure() }
+        findViewById<Button>(R.id.open_source_licenses).setOnClickListener {
+            startActivity(Intent(this, LicensesActivity::class.java))
+        }
+
+        if (savedInstanceState == null && !Consent.isGiven(this)) openDisclosure()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val consent = Consent.isGiven(this)
+        statusView.setText(
+            when {
+                !consent -> R.string.status_consent_needed
+                isServiceEnabled() -> R.string.status_enabled
+                else -> R.string.status_disabled
+            },
+        )
+        if (consent) {
+            primaryAction.setText(R.string.open_accessibility_settings)
+            primaryAction.setOnClickListener {
+                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            }
+        } else {
+            primaryAction.setText(R.string.review_and_agree)
+            primaryAction.setOnClickListener { openDisclosure() }
+        }
+    }
+
+    private fun openDisclosure() {
+        startActivity(Intent(this, ConsentActivity::class.java))
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -51,13 +83,6 @@ class MainActivity : Activity() {
             Icon.createWithResource(this, R.drawable.ic_tile),
             mainExecutor,
         ) { result -> Log.i(LOG_TAG, "Add tile request result: $result") }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        statusView.setText(
-            if (isServiceEnabled()) R.string.status_enabled else R.string.status_disabled
-        )
     }
 
     private fun isServiceEnabled(): Boolean {

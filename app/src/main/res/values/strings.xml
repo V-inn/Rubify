@@ -10,7 +10,11 @@
     <string name="main_body">Rubify shows pinyin above Chinese characters on your screen. Enable the Rubify accessibility service, then tap the accessibility button whenever you want pinyin for what is on screen.</string>
     <string name="status_enabled">Service is enabled.</string>
     <string name="status_disabled">Service is disabled.</string>
+    <string name="status_consent_needed">Rubify needs your consent before you turn it on.</string>
     <string name="open_accessibility_settings">Open accessibility settings</string>
+    <string name="review_and_agree">Review and agree</string>
+    <string name="privacy_and_consent">Privacy and consent</string>
+    <string name="open_source_licenses">Open-source licenses</string>
     <string name="main_tile_hint">In full-screen apps the accessibility button is hidden. Use the Rubify tile in Quick Settings instead.</string>
     <string name="add_tile">Add Quick Settings tile</string>
 
@@ -23,4 +27,22 @@
     <string name="hide_pinyin">Hide pinyin</string>
     <string name="show_pinyin">Show pinyin</string>
     <string name="close_pinyin">Close Rubify for now</string>
+
+    <!-- Prominent disclosure (ConsentActivity). Changing its meaning requires
+         bumping Consent.DISCLOSURE_VERSION and updating play/. -->
+    <string name="consent_title">Before you turn on Rubify</string>
+    <string name="consent_intro">Rubify uses an Android accessibility service to show pinyin above Chinese text in any app. Please read how it works before you turn it on.</string>
+    <string name="consent_what_heading">What Rubify does</string>
+    <string name="consent_what_body">When you tap the accessibility button, the Rubify Quick Settings tile, or Refresh on Rubify\'s floating bubble, Rubify takes a screenshot, finds the Chinese characters in it and draws their pinyin on top of the screen. When you start it from the tile, it first closes the Quick Settings panel.</string>
+    <string name="consent_access_heading">What it accesses</string>
+    <string name="consent_access_body">Only the image of your screen at the moment you tap. That image can include personal information that is visible on screen, such as messages or names.</string>
+    <string name="consent_never_heading">What it never does</string>
+    <string name="consent_never_body">Rubify never looks at your screen on its own. It does not track what you do in other apps, cannot read or operate their text and buttons, and does not change your settings.</string>
+    <string name="consent_data_heading">Your data</string>
+    <string name="consent_data_body">Screenshots are processed on this device and discarded once the pinyin is drawn. Rubify does not store, collect or share any personal data, and it has no internet access.</string>
+    <string name="consent_given_note">You have agreed to this. You can withdraw your consent at any time; Rubify then stops reading the screen until you agree again. To turn the service off completely, use accessibility settings.</string>
+    <string name="consent_agree">Agree and continue</string>
+    <string name="consent_decline">Not now</string>
+    <string name="consent_close">Close</string>
+    <string name="consent_withdraw">Withdraw consent</string>
 </resources>

@@ -34,7 +34,7 @@ Early development. Done so far:
 | 5 | Overlay aligned to characters, adjusted for scale and DPI | Done, verified on device |
 | 6 | Toggle on second tap, Quick Settings tile | Done, verified on device (including full screen). The bubble's hide button replaces the planned auto-hide timeout |
 | 7 | Robustness: rotation, scroll and zoom | Done, verified on device: rotation hides the pinyin and keeps the bubble in place, and Refresh reads portrait or landscape. After scrolling or zooming, you tap Refresh |
-| 8 | Publishing prep: consent screen, store disclosure, Play declaration form | Planned |
+| 8 | Publishing prep: consent screen, store disclosure, Play declaration form | Code done (consent, licenses, signed and shrunk release build). Store texts and forms drafted in `play/`. Account steps pending, see `play/release-checklist.md` |
 
 Not in the MVP: a pipeline that pre-renders pinyin into PDFs, live OCR of handwritten S Pen ink, Cantonese, full translation, and a live camera mode.
 
@@ -49,13 +49,16 @@ Not in the MVP: a pipeline that pre-renders pinyin into PDFs, live OCR of handwr
 ./gradlew assembleDebug          # app/build/outputs/apk/debug/app-debug.apk
 ./gradlew installDebug           # install on a connected device
 ./gradlew testDebugUnitTest lintDebug
+./gradlew bundleRelease          # app/build/outputs/bundle/release/app-release.aab (R8, signed if configured)
 ```
+
+Release signing reads `rubifyKeystoreFile`, `rubifyKeystorePassword`, `rubifyKeyAlias` and `rubifyKeyPassword` from `~/.gradle/gradle.properties`. Without them, the release build is left unsigned.
 
 Create `local.properties` with `sdk.dir=/path/to/Android/Sdk` if `ANDROID_HOME` is not set.
 
 ## Try it on a device
 
-1. Install the debug build and open **Rubify**.
+1. Install the debug build and open **Rubify**. The disclosure opens first. Read it and tap **Agree and continue**. Until you agree, the service doesn't read the screen: tapping the button or tile opens the disclosure instead.
 2. Tap **Open accessibility settings**, enable **Rubify**, and allow it.
 3. Optional: tap **Add Quick Settings tile** (Android 13+), or add the Rubify tile yourself by editing Quick Settings.
 4. If the system asks, assign the accessibility button (or gesture) to Rubify. If another service also uses the button, each tap opens a menu: pick Rubify. The capture waits 400 ms so the menu is gone by then.
@@ -107,6 +110,7 @@ Sources, all MIT licensed (notices ship in `assets/pinyin/LICENSES.txt`): [mozil
 
 ## Privacy
 
+- Before first use, Rubify shows a disclosure and asks for your consent. You can withdraw it under **Privacy and consent**.
 - Rubify reads the screen only when you tap: the accessibility button, the Quick Settings tile, or Refresh (or Show, after a rotation) on its bubble. Starting from the tile also closes the Quick Settings panel, using the accessibility "dismiss notification shade" action (Back on Android 11). It subscribes to no accessibility events and cannot read window content.
 - The pinyin and the bubble live in accessibility overlay windows. The pinyin window ignores touches, so everything you do goes to the app underneath. Only the bubble itself takes touches.
 - Everything runs on the device, with the OCR model bundled in the app. The app does not request the `INTERNET` permission. ML Kit's library asks for it (to send usage stats), so the manifest removes it, and the build fails if any network permission shows up.
@@ -116,7 +120,10 @@ Sources, all MIT licensed (notices ship in `assets/pinyin/LICENSES.txt`): [mozil
 
 ```
 app/src/main/java/com/rubify/
-  MainActivity.kt                      service status and link to settings
+  MainActivity.kt                      status, enable, tile, privacy, licenses
+  LicensesActivity.kt                  open-source notices
+  consent/Consent.kt                   disclosure consent flag (versioned)
+  consent/ConsentActivity.kt           prominent disclosure and consent
   service/RubifyAccessibilityService.kt  button callback, windows, capture -> OCR -> pinyin
   service/ReadingSession.kt            when to read and what to show (pure Kotlin)
   capture/ScreenCapturer.kt            takeScreenshot() into a software bitmap
@@ -136,5 +143,16 @@ app/src/main/assets/pinyin/          generated pinyin dictionary
 app/src/main/res/xml/accessibility_service_config.xml   service capabilities
 tools/pinyin-data/                   dictionary build script
 ```
+
+## Publishing
+
+Play Store materials live in `play/`:
+- `listing.md`: store listing, including the accessibility disclosure
+- `accessibility-declaration.md`: Accessibility API declaration answers and demo video script
+- `data-safety.md`: data safety form answers
+- `privacy-policy.md`: privacy policy, to host publicly
+- `release-checklist.md`: keys, builds, forms
+
+Open-source notices are shown in the app under **Open-source licenses**.
 
 Contributor and agent guardrails live in [AGENTS.md](AGENTS.md).

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/consent_title"
+            android:textAppearance="@android:style/TextAppearance.DeviceDefault.Large" />
+
+        <TextView
+            style="@style/Rubify.Body"
+            android:text="@string/consent_intro" />
+
+        <TextView
+            style="@style/Rubify.Heading"
+            android:text="@string/consent_what_heading" />
+
+        <TextView
+            style="@style/Rubify.Body"
+            android:text="@string/consent_what_body" />
+
+        <TextView
+            style="@style/Rubify.Heading"
+            android:text="@string/consent_access_heading" />
+
+        <TextView
+            style="@style/Rubify.Body"
+            android:text="@string/consent_access_body" />
+
+        <TextView
+            style="@style/Rubify.Heading"
+            android:text="@string/consent_never_heading" />
+
+        <TextView
+            style="@style/Rubify.Body"
+            android:text="@string/consent_never_body" />
+
+        <TextView
+            style="@style/Rubify.Heading"
+            android:text="@string/consent_data_heading" />
+
+        <TextView
+            style="@style/Rubify.Body"
+            android:text="@string/consent_data_body" />
+
+        <TextView
+            android:id="@+id/consent_given_note"
+            style="@style/Rubify.Body"
+            android:layout_marginTop="24dp"
+            android:text="@string/consent_given_note" />
+
+        <!-- Both choices look alike: consent must not be nudged. -->
+        <LinearLayout
+            style="?android:attr/buttonBarStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/consent_secondary"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <Button
+                android:id="@+id/consent_primary"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

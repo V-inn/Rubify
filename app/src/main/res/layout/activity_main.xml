@@ -19,32 +19,26 @@
             android:textAppearance="@android:style/TextAppearance.DeviceDefault.Large" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Rubify.Body"
             android:layout_marginTop="16dp"
-            android:text="@string/main_body"
-            android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium" />
+            android:text="@string/main_body" />
 
         <TextView
             android:id="@+id/service_status"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium" />
+            style="@style/Rubify.Body"
+            android:layout_marginTop="24dp" />
 
+        <!-- Opens accessibility settings, or the disclosure while consent is missing. -->
         <Button
-            android:id="@+id/open_accessibility_settings"
+            android:id="@+id/primary_action"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/open_accessibility_settings" />
+            android:layout_marginTop="16dp" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/Rubify.Body"
             android:layout_marginTop="32dp"
-            android:text="@string/main_tile_hint"
-            android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium" />
+            android:text="@string/main_tile_hint" />
 
         <!-- Android 13+ only; hidden in code otherwise. -->
         <Button
@@ -53,5 +47,16 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="@string/add_tile" />
+
+        <Button
+            android:id="@+id/privacy_and_consent"
+            style="@style/Rubify.LinkButton"
+            android:layout_marginTop="32dp"
+            android:text="@string/privacy_and_consent" />
+
+        <Button
+            android:id="@+id/open_source_licenses"
+            style="@style/Rubify.LinkButton"
+            android:text="@string/open_source_licenses" />
     </LinearLayout>
 </ScrollView>
