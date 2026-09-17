@@ -1,6 +1,5 @@
 package com.rubify.consent
 
-import android.annotation.SuppressLint
 import android.content.Context
 
 /**
@@ -19,13 +18,10 @@ object Consent {
     fun isGiven(context: Context): Boolean =
         prefs(context).getInt(KEY_ACCEPTED_VERSION, 0) >= DISCLOSURE_VERSION
 
-    // The edit {} helper lives in core-ktx, which the app doesn't depend on.
-    @SuppressLint("UseKtx")
     fun give(context: Context) {
         prefs(context).edit().putInt(KEY_ACCEPTED_VERSION, DISCLOSURE_VERSION).apply()
     }
 
-    @SuppressLint("UseKtx")
     fun withdraw(context: Context) {
         prefs(context).edit().remove(KEY_ACCEPTED_VERSION).apply()
     }

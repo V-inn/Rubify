@@ -25,8 +25,8 @@ import com.rubify.tile.ReadingTileService
 
 /**
  * Entry point and the service's settings screen: service state, the way to
- * turn it on (only after the disclosure is accepted), the tile, privacy and
- * licenses. The disclosure opens by itself on first launch.
+ * turn it on (only after the disclosure is accepted), the tile, consent, the
+ * privacy policy and licenses. The disclosure opens by itself on first launch.
  */
 class MainActivity : Activity() {
 
@@ -55,6 +55,7 @@ class MainActivity : Activity() {
             addTile.visibility = View.GONE
         }
         findViewById<Button>(R.id.privacy_and_consent).setOnClickListener { openDisclosure() }
+        findViewById<Button>(R.id.privacy_policy).setOnClickListener { PrivacyPolicy.open(this) }
         findViewById<Button>(R.id.open_source_licenses).setOnClickListener {
             startActivity(Intent(this, LicensesActivity::class.java))
         }

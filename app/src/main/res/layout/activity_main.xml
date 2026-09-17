@@ -71,6 +71,11 @@
             android:text="@string/privacy_and_consent" />
 
         <Button
+            android:id="@+id/privacy_policy"
+            style="@style/Rubify.LinkButton"
+            android:text="@string/privacy_policy" />
+
+        <Button
             android:id="@+id/open_source_licenses"
             style="@style/Rubify.LinkButton"
             android:text="@string/open_source_licenses" />

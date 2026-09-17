@@ -112,9 +112,6 @@ class ControlBubble(
             BubblePlacement.DEFAULT
         }
 
-    // The edit {} helper lives in core-ktx, which the app doesn't depend on;
-    // one call isn't worth adding it.
-    @SuppressLint("UseKtx")
     private fun savePlacement(root: View, params: LayoutParams, screen: Rect) {
         val placement = BubblePlacement.fromPixels(
             params.x, params.y, screen.width(), screen.height(), root.width, root.height, margin,

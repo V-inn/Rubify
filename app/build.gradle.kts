@@ -70,6 +70,12 @@ android {
         }
     }
 
+    lint {
+        // Suggests androidx.core-ktx helpers (edit {}, toUri()). The app
+        // deliberately doesn't depend on core-ktx for a handful of calls.
+        disable += "UseKtx"
+    }
+
     buildFeatures {
         // BuildConfig.DEBUG gates debug-only images and recognized-text logs.
         buildConfig = true

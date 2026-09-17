@@ -120,6 +120,7 @@ Sources, all MIT licensed (notices ship in `assets/pinyin/LICENSES.txt`): [mozil
 ## Privacy
 
 - Before first use, Rubify shows a disclosure and asks for your consent. You can withdraw it under **Privacy and consent**.
+- Full privacy policy: <https://v-inn.github.io/Rubify/privacy/>. It's linked from the disclosure and the main screen.
 - Rubify reads the screen only when you tap: the accessibility button, the Quick Settings tile, or Refresh (or Show, after a rotation) on its bubble. Starting from the tile also closes the Quick Settings panel, using the accessibility "dismiss notification shade" action (Back on Android 11). It subscribes to no accessibility events and cannot read window content.
 - The pinyin and the bubble live in accessibility overlay windows. The pinyin window ignores touches, so everything you do goes to the app underneath. Only the bubble itself takes touches.
 - Everything runs on the device, with the OCR model bundled in the app. The app does not request the `INTERNET` permission. ML Kit's library asks for it (to send usage stats), so the manifest removes it, and the build fails if any network permission shows up.
@@ -188,7 +189,7 @@ Personal details aren't stored in the repository. The workflow fills them in fro
 One-time setup:
 1. **Settings → Pages → Build and deployment → Source:** choose **GitHub Actions**.
 2. **Settings → Secrets and variables → Actions → Variables:** add `RUBIFY_DEVELOPER_NAME` and `RUBIFY_CONTACT_EMAIL`. Both appear on the public page. The deploy fails while either is missing.
-3. Run the **Pages** workflow, from the Actions tab or by pushing a change to `site/`. The policy is then at `https://<owner>.github.io/<repository>/privacy/`.
+3. Run the **Pages** workflow, from the Actions tab or by pushing a change to `site/`. The policy is then at <https://v-inn.github.io/Rubify/privacy/>. The app links there through the `privacy_policy_url` string, so update that string if the repository or owner changes.
 
 Preview locally:
 

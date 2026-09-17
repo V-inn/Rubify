@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import com.rubify.PrivacyPolicy
 import com.rubify.R
 import com.rubify.service.RubifyAccessibilityService
 
@@ -19,6 +20,7 @@ class ConsentActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_consent)
+        findViewById<Button>(R.id.consent_read_policy).setOnClickListener { PrivacyPolicy.open(this) }
         bind()
     }
 

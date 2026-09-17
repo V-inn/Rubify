@@ -52,6 +52,12 @@
             style="@style/Rubify.Body"
             android:text="@string/consent_data_body" />
 
+        <Button
+            android:id="@+id/consent_read_policy"
+            style="@style/Rubify.LinkButton"
+            android:layout_marginTop="8dp"
+            android:text="@string/consent_read_policy" />
+
         <TextView
             android:id="@+id/consent_given_note"
             style="@style/Rubify.Body"

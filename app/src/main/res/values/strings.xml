@@ -15,6 +15,9 @@
     <string name="review_and_agree">Review and agree</string>
     <string name="privacy_and_consent">Privacy and consent</string>
     <string name="open_source_licenses">Open-source licenses</string>
+    <string name="privacy_policy">Privacy policy</string>
+    <!-- GitHub Pages deployment of site/privacy/ (.github/workflows/pages.yml). -->
+    <string name="privacy_policy_url" translatable="false">https://v-inn.github.io/Rubify/privacy/</string>
     <string name="restricted_settings_hint">Is Rubify greyed out in accessibility settings? Android blocks accessibility for apps installed from a download until you allow it: open App info, tap the ⋮ menu, then Allow restricted settings. Then turn Rubify on again.</string>
     <string name="open_app_info">Open app info</string>
     <string name="main_tile_hint">In full-screen apps the accessibility button is hidden. Use the Rubify tile in Quick Settings instead.</string>
@@ -44,6 +47,7 @@
     <string name="consent_data_heading">Your data</string>
     <string name="consent_data_body">Screenshots are processed on this device and discarded once the pinyin is drawn. Rubify does not store, collect or share any personal data, and it has no internet access.</string>
     <string name="consent_given_note">You have agreed to this. You can withdraw your consent at any time; Rubify then stops reading the screen until you agree again. To turn the service off completely, use accessibility settings.</string>
+    <string name="consent_read_policy">Read the full privacy policy</string>
     <string name="consent_agree">Agree and continue</string>
     <string name="consent_decline">Not now</string>
     <string name="consent_close">Close</string>
