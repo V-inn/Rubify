@@ -32,7 +32,7 @@ adb logcat -s Rubify                                   # all app logs use this t
 AGP **8.11.1**, Kotlin **2.2.20**, Gradle **8.13**, compile/target SDK **36**, JVM target **17**. They move together, because each one constrains the others (see the comment in `build.gradle.kts`). Never bump one alone.
 
 - `minSdk = 30` is a hard floor, because `takeScreenshot()` needs API 30. Don't lower it.
-- `applicationId = "io.github.v_inn.rubify"` is permanent after the first Play upload.
+- `applicationId = "io.github.v_inn.rubify"` is permanent. It is registered to the developer account in Play Console, bound to the release signing certificate, so changing it means registering and appealing again. It was renamed from `com.rubify` in v0.2, because that claimed a domain we don't own; `io.github.v_inn` is the reverse of `v-inn.github.io`, where the privacy policy is hosted, with the underscore standing in for the hyphen that package names can't contain.
 - Keep dependencies minimal. Each new library needs a reason in a comment next to it. In use: ML Kit Text Recognition v2 Chinese, **bundled** model (`com.google.mlkit:text-recognition-chinese`). Pinyin is **in-house** (`pinyin/`), because TinyPinyin has no tones and pinyin4j can't use word context. Don't swap in a library without asking.
 - After adding a dependency, check the merged manifest for new permissions and components (`app/build/intermediates/merged_manifest/`). The debug APK is about 53 MB because ML Kit's native OCR library is packaged for 4 ABIs. A Play app bundle splits it per ABI.
 
@@ -74,6 +74,8 @@ Play approves the Accessibility API only for a narrow, clearly disclosed purpose
 - **Workflow changes:** keep `permissions` minimal, never print secrets, and never expose them to `pull_request` runs.
 - **ABI splits stay off by default,** so debug builds and the Play bundle are unaffected.
 - **Every release:** bump `versionCode` by 1 and set `versionName`.
+- **App identity is registered with Google and must not change.** Package `io.github.v_inn.rubify`, release certificate SHA-256 `646cc4facfc8cc1130ff72b7ab63efca0ed705e5eca33d24125a3b30b5c0a2ff` (SHA-1 `00817b0523db1b8ccdf82a4ac9e428c43295cb93`). Both are registered under Android developer verification, whose enforcement starts on 2026-09-30 in Brazil, Indonesia, Singapore and Thailand and rolls out globally through 2027. Without that registration, installs outside Play fall back to a deliberately slow flow. Never rotate the key or change the package without asking: it invalidates the registration and the Play Protect appeal. If Play App Signing is ever enabled, upload this same key as the app signing key, or Play builds will ship a different certificate than the GitHub ones. The fingerprint is public and documented in `readme.md` → Install.
+- A false-positive appeal for the Play Protect install block was submitted on 2026-09-18, citing 0/68 VirusTotal results on the v0.2 universal and arm64 APKs. Google publishes no SLA and may never reply, so the install behavior is the signal. The appeal is keyed on package name and certificate, so ordinary updates signed with the same key shouldn't need a new one.
 
 ## Consent and publishing
 
@@ -131,7 +133,9 @@ Test device: Galaxy Tab S9 FE (SM-X610), Android 16 (API 36), One UI, 1600x2560 
 - Rotation: `onConfigurationChanged` fires on the service. A landscape capture comes back as 2560x1600 and reads fine (OCR about 350 ms).
 - The bubble's placement is stored as fractions of the free space (`BubblePlacement`) in the `control_bubble` preferences, and applied again on rotation.
 - The arm64 split APK (about 16 MB, from `-PrubifyAbiSplits=true`) installs and runs. `adb install` reports `packageSource=1` (OTHER).
-- Installing from GitHub (v0.1 downloaded in Chrome) is blocked by Play Protect's enhanced fraud protection ("O app foi bloqueado para proteger seu dispositivo"), with no way to continue. Installing the same APK with `adb install` works.
+- Installing from GitHub (v0.1 downloaded in Chrome) is blocked by Play Protect ("O app foi bloqueado para proteger seu dispositivo… Este app pode pedir acesso a dados sensíveis"), with no way to continue. Installing the same APK with `adb install` works, so the block follows the download source, not the file. The wording, the source discriminator and Brazil being a pilot country all point at enhanced fraud protection, but that's inference, not a verdict we can read.
+- **Renaming the package did not lift the block.** v0.2 under `io.github.v_inn.rubify` is blocked the same way. The rename was worth doing for other reasons (see Toolchain lock), but package name was never the trigger — an accessibility service from a browser download is.
+- v0.2 installed from the published `rubify-0.2-arm64-v8a.apk` hashes identically to the release asset on device (`adb exec-out cat $(pm path …)`), confirming the CI signing secret holds the same keystore as the local one.
 - Restricted settings: the non-debuggable v0.1 release installed with `adb install` still had its accessibility toggle greyed out until "Allow restricted settings" (appop `ACCESS_RESTRICTED_SETTINGS`). The debuggable debug builds never were. So the `MainActivity` hint shows for every non-store install (`packageSource != STORE`).
 - Release build (R8) runs on device. The dictionary loads in about 320 ms, against 1.4 s in debug. The release APK is 45.9 MB with all ABIs, and the AAB is 21.6 MB.
 - Toasts are suppressed while the app's notifications are off ("Suppressing toast from package io.github.v_inn.rubify by user request"), and the user doesn't want status messages anyway. Don't add toasts or notifications for reading results.

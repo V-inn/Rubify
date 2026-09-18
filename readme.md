@@ -57,6 +57,8 @@ SHA-256: 64:6C:C4:FA:CF:C8:CC:11:30:FF:72:B7:AB:63:EF:CA:0E:D7:05:E5:EC:A3:3D:24
 apksigner verify --print-certs rubify-<version>-universal.apk
 ```
 
+The v0.2 APKs are also on VirusTotal, which reports every engine's verdict on that exact file: [universal](https://www.virustotal.com/gui/file/b4c24056665d8c9690032b9d4e90906ebf787316e7438a1f41aabbd624ac0359), [arm64-v8a](https://www.virustotal.com/gui/file/f38b34131673e192a9aa596c32754bc6bbb96458a41c1638ed198e8558e6029c). Any release APK can be looked up the same way, by pasting its SHA-256 from `SHA256SUMS.txt` into VirusTotal's search.
+
 > **Blocked by Play Protect?** In some countries, including Brazil, Google Play Protect blocks installing apps that use an accessibility service when they come from a browser, file manager or chat app. The message is "App blocked to protect your device", and there's no option to continue. Until Rubify is on Google Play, install it from a computer with USB debugging turned on:
 >
 > ```sh
