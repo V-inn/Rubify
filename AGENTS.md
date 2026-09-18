@@ -10,7 +10,7 @@ The implementation plan lives in `docs/`, and store and publishing material in `
 
 ## License
 
-The repository is public and licensed under Apache-2.0 (`LICENSE`). Anything added must be compatible with it: no GPL code, and no data without a compatible license. New third-party code or data needs an entry in `app/src/main/assets/NOTICES.txt` (or a generated notice file). Never commit copyrighted test material, such as textbook screenshots.
+The repository is public and licensed under Apache-2.0 (`LICENSE`). Anything added must be compatible with it: no GPL code, and no data without a compatible license. New third-party code or data needs an entry in `app/src/main/assets/NOTICES.txt` (or a generated notice file). Never commit copyrighted test material, such as textbook screenshots. The one exception is the readme's short textbook excerpt (`site/assets/screenshots/reading-textbook.jpg`), which the maintainer chose to include to show accuracy on brush-style fonts. It's cropped to the text, leaving out the page's photo.
 
 ## Language
 

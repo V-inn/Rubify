@@ -4,6 +4,10 @@ Rubify is an Android app that shows pinyin above the Chinese characters on your 
 
 Tap the system **accessibility button** and Rubify takes a silent screenshot, recognizes the hanzi on it, and draws the pinyin for each character right above it. You don't leave the app you're reading in, and you don't take screenshots by hand. It works in ordinary apps (browser, WeChat, PDF readers) and on book pages opened in Samsung Notes.
 
+![Pinyin above four lines of printed Chinese, with Rubify's control bubble on the right](site/assets/screenshots/reading.jpg)
+
+Recognition isn't perfect. Here 47 of the 48 syllables are right, but the 觉 in 睡觉 was read as the look-alike 党, so it shows dǎng instead of jiào. See [Known limits](#known-limits).
+
 ## How it works
 
 ```
@@ -118,7 +122,11 @@ On a Galaxy Tab S9 FE, OCR of a full 1600x2560 screen takes about 550 ms, and pi
 
 - **Scrolling and zooming aren't followed automatically.** The pinyin stays where it was until you tap Refresh. Samsung Notes reports no scroll events, and the other ways to notice movement (content-change events, repeated screenshots) would weaken the privacy story.
 - **Switching apps doesn't hide the pinyin.** It stays on top of the next app until you close it or tap the button or tile, for the same reason.
-- **OCR errors carry through.** Brush-style (kai) fonts are the hardest.
+- **Recognition isn't 100% accurate.** When OCR mistakes a character for a look-alike, you get the pinyin of the wrong character. Clear printed text comes out mostly right, as in the screenshot at the top. Brush-style (kai) fonts, common in textbooks, are the hardest: on one textbook page, about 95% of characters were right. A mistake often changes or goes away if you move the page a little and tap Refresh.
+
+  ![Pinyin above an excerpt of a textbook page in a brush-style font, with a few misread characters](site/assets/screenshots/reading-textbook.jpg)
+
+  In this textbook excerpt, 候 was read as 侯 (hóu, twice), 面 and 几 as 而 and 儿 (ér), and 便 as 使 (shǐ). 啡 was split in two, so 咖啡 got three syllables.
 
 ## Pinyin
 
