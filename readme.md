@@ -45,6 +45,18 @@ Not in the MVP: a pipeline that pre-renders pinyin into PDFs, live OCR of handwr
 
 After installing, open Rubify, agree to the disclosure, and turn Rubify on in accessibility settings.
 
+> **Upgrading from v0.1?** v0.2 moved the application ID from `com.rubify` to `io.github.v_inn.rubify`, so Android treats it as a different app. Uninstall v0.1 first; consent and the bubble's position don't carry over.
+
+Every release ships a `SHA256SUMS.txt` next to the APKs, so a download can be checked with `sha256sum -c SHA256SUMS.txt`. All releases are signed with the same key, whose certificate fingerprint is:
+
+```
+SHA-256: 64:6C:C4:FA:CF:C8:CC:11:30:FF:72:B7:AB:63:EF:CA:0E:D7:05:E5:EC:A3:3D:24:12:5A:3B:30:B5:C0:A2:FF
+```
+
+```sh
+apksigner verify --print-certs rubify-<version>-universal.apk
+```
+
 > **Blocked by Play Protect?** In some countries, including Brazil, Google Play Protect blocks installing apps that use an accessibility service when they come from a browser, file manager or chat app. The message is "App blocked to protect your device", and there's no option to continue. Until Rubify is on Google Play, install it from a computer with USB debugging turned on:
 >
 > ```sh
@@ -89,9 +101,9 @@ Create `local.properties` with `sdk.dir=/path/to/Android/Sdk` if `ANDROID_HOME` 
 6. Pull the debug images and compare them with the screen:
 
    ```sh
-   adb shell run-as com.rubify ls files/debug-images
-   adb exec-out run-as com.rubify cat files/debug-images/<id>-screenshot.jpg > shot.jpg
-   adb exec-out run-as com.rubify cat files/debug-images/<id>-ocr.jpg > ocr.jpg
+   adb shell run-as io.github.v_inn.rubify ls files/debug-images
+   adb exec-out run-as io.github.v_inn.rubify cat files/debug-images/<id>-screenshot.jpg > shot.jpg
+   adb exec-out run-as io.github.v_inn.rubify cat files/debug-images/<id>-ocr.jpg > ocr.jpg
    ```
 
    `-ocr.jpg` is the screenshot with OCR boxes drawn on it (lines in blue, hanzi in red, other characters in gray) and each hanzi's pinyin above its box. Debug builds keep the images of the 5 newest captures. Release builds never write them to disk.
@@ -137,7 +149,7 @@ Sources, all MIT licensed (notices ship in `assets/pinyin/LICENSES.txt`): [mozil
 ## Project layout
 
 ```
-app/src/main/java/com/rubify/
+app/src/main/java/io/github/v_inn/rubify/
   MainActivity.kt                      status, enable, tile, privacy, licenses
   LicensesActivity.kt                  open-source notices
   consent/Consent.kt                   disclosure consent flag (versioned)

@@ -11,5 +11,5 @@
     android:canRetrieveWindowContent="false"
     android:canTakeScreenshot="true"
     android:description="@string/accessibility_service_description"
-    android:settingsActivity="com.rubify.MainActivity"
+    android:settingsActivity="io.github.v_inn.rubify.MainActivity"
     android:summary="@string/accessibility_service_summary" />

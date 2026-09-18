@@ -32,7 +32,7 @@ adb logcat -s Rubify                                   # all app logs use this t
 AGP **8.11.1**, Kotlin **2.2.20**, Gradle **8.13**, compile/target SDK **36**, JVM target **17**. They move together, because each one constrains the others (see the comment in `build.gradle.kts`). Never bump one alone.
 
 - `minSdk = 30` is a hard floor, because `takeScreenshot()` needs API 30. Don't lower it.
-- `applicationId = "com.rubify"` is permanent after the first Play upload.
+- `applicationId = "io.github.v_inn.rubify"` is permanent after the first Play upload.
 - Keep dependencies minimal. Each new library needs a reason in a comment next to it. In use: ML Kit Text Recognition v2 Chinese, **bundled** model (`com.google.mlkit:text-recognition-chinese`). Pinyin is **in-house** (`pinyin/`), because TinyPinyin has no tones and pinyin4j can't use word context. Don't swap in a library without asking.
 - After adding a dependency, check the merged manifest for new permissions and components (`app/build/intermediates/merged_manifest/`). The debug APK is about 53 MB because ML Kit's native OCR library is packaged for 4 ABIs. A Play app bundle splits it per ABI.
 
@@ -95,7 +95,7 @@ Play approves the Accessibility API only for a narrow, clearly disclosed purpose
 ## Architecture
 
 ```
-com.rubify
+io.github.v_inn.rubify
   service/   AccessibilityService (wiring, windows) + pure ReadingSession state machine
   capture/   takeScreenshot() into a software bitmap
   ocr/       ML Kit wrapper + pure OcrPage model (per-char boxes)
@@ -134,7 +134,7 @@ Test device: Galaxy Tab S9 FE (SM-X610), Android 16 (API 36), One UI, 1600x2560 
 - Installing from GitHub (v0.1 downloaded in Chrome) is blocked by Play Protect's enhanced fraud protection ("O app foi bloqueado para proteger seu dispositivo"), with no way to continue. Installing the same APK with `adb install` works.
 - Restricted settings: the non-debuggable v0.1 release installed with `adb install` still had its accessibility toggle greyed out until "Allow restricted settings" (appop `ACCESS_RESTRICTED_SETTINGS`). The debuggable debug builds never were. So the `MainActivity` hint shows for every non-store install (`packageSource != STORE`).
 - Release build (R8) runs on device. The dictionary loads in about 320 ms, against 1.4 s in debug. The release APK is 45.9 MB with all ABIs, and the AAB is 21.6 MB.
-- Toasts are suppressed while the app's notifications are off ("Suppressing toast from package com.rubify by user request"), and the user doesn't want status messages anyway. Don't add toasts or notifications for reading results.
+- Toasts are suppressed while the app's notifications are off ("Suppressing toast from package io.github.v_inn.rubify by user request"), and the user doesn't want status messages anyway. Don't add toasts or notifications for reading results.
 - Labels: text size is 0.4 of the line's median character height (9–28 sp), shrunk per line so neighbouring syllables don't collide.
 - Accessibility events (tried, then removed):
   - Subscribing to event types at runtime makes the foreground app send a `TYPE_WINDOW_STATE_CHANGED` for itself right away.

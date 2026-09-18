@@ -23,19 +23,19 @@ val canSignRelease = listOf(rubifyKeystoreFile, rubifyKeystorePassword, rubifyKe
 val abiSplits = providers.gradleProperty("rubifyAbiSplits").map(String::toBoolean).getOrElse(false)
 
 android {
-    namespace = "com.rubify"
+    namespace = "io.github.v_inn.rubify"
     compileSdk = 36
 
     defaultConfig {
         // Permanent once the first build is uploaded to Play.
-        applicationId = "com.rubify"
+        applicationId = "io.github.v_inn.rubify"
         // AccessibilityService.takeScreenshot() is API 30. This is the floor.
         minSdk = 30
         targetSdk = 36
         // versionCode is Play's ordering key: +1 for every uploaded build,
         // never reused. versionName is for people.
-        versionCode = 1
-        versionName = "0.1"
+        versionCode = 2
+        versionName = "0.2"
     }
 
     signingConfigs {
